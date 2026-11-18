@@ -1,0 +1,5 @@
+# マクロ（.bas）は Shift_JIS・改行 CRLF のまま取り込む必要があるので、git に改行を変換させない
+*.bas -text
+*.xlsx binary
+*.xlsm binary
+*.png binary
