@@ -217,7 +217,7 @@ Private drawOK As Boolean       ' 最後の作図が最後まで終わったか（PDF にする前の
 Public Sub DrawNetworkSchedule()
     Dim wsD As Worksheet, i As Long, p As Long, cnt As Long, txt As String, firstName As String
     Dim keepSheet As String, keepRow As Long, keepCol As Long, movedIds As Collection
-    Dim eNum As Long, eDesc As String
+    Dim errNo As Long, eDesc As String
 
     drawOK = False
     If spdOn Then Exit Sub      ' 作図の途中（進み具合を出している間）に、もう一度押されたときは何もしない
@@ -331,10 +331,10 @@ CleanUp:
     Exit Sub
 
 ErrHandler:
-    eNum = Err.Number
+    errNo = Err.Number
     eDesc = Err.Description
     SpeedOff
-    If eNum = 18 Then
+    If errNo = 18 Then
         MsgBox "作図を中止しました。作りかけのシートは、次に作図すると作り直されます。", vbInformation
     Else
         MsgBox "作図中にエラーが発生しました。" & vbCrLf & eDesc, vbCritical
