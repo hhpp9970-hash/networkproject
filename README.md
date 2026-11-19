@@ -27,6 +27,11 @@
 - `.bas` は Shift_JIS・改行 CRLF のまま取り込む必要があります。GitHub の画面では日本語が文字化けして見えますが、中身は正しいです。ブラウザで編集すると壊れるので、編集しないでください（`.gitattributes` で改行の変換を止めています）
 - このリポジトリは公開されています。実際の工事の工程データ（会社名・日程など）は入れないでください
 
+## 開発
+
+マクロの元は `src/NetworkSchedule.vba`（UTF-8）です。編集したら `python tools/build_bas.py` でチェックしてから
+`NetworkSchedule.bas`（Shift_JIS・CRLF）を作ります。Claude Code で続けるときの決めごとは [CLAUDE.md](CLAUDE.md) にあります。
+
 ## 版
 
 | 版 | 主な変更 |

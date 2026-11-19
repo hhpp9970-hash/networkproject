@@ -3,3 +3,8 @@
 *.xlsx binary
 *.xlsm binary
 *.png binary
+# 編集用の元（UTF-8）とスクリプトは LF にそろえる
+*.vba text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
