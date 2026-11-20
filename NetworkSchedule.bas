@@ -1,6 +1,6 @@
 Attribute VB_Name = "NetworkSchedule"
 '==============================================================================
-'  ÉlÉbÉgÉèÅ[ÉNçHíˆï\Åiâ°é≤ÅÅì˙íˆÅEècé≤ÅÅçHãÊÅEçHéñÅjé©ìÆçÏê}É}ÉNÉç  ÉTÉìÉvÉã
+'  ÉlÉbÉgÉèÅ[ÉNçHíˆï\Åiâ°é≤ÅÅì˙íˆÅEècé≤ÅÅñ⁄ìIÅEçHãÊÅEçHéñÅjé©ìÆçÏê}É}ÉNÉç  ÉTÉìÉvÉã
 '
 '  ÅuçHíˆÉfÅ[É^ÅvÉVÅ[ÉgÇÃï\Ç©ÇÁÅAéüÇÃÉVÅ[ÉgÇçÏÇËíºÇµÇƒçÏê}ÇµÇ‹Ç∑ÅB
 '    ÅEÅuëSëÃçHíˆÅv Åc Ç∑Ç◊ÇƒÇÃçÏã∆ÅBÅuÇ‹Ç∆ÇﬂÅvóÒÇ™Ç†ÇÍÇŒÅAÇ‹Ç∆ÇﬂÇ≤Ç∆Ç…1ñ{ÇÃñÓê¸Ç…ÇµÇƒ
@@ -47,8 +47,10 @@ Attribute VB_Name = "NetworkSchedule"
 '    ÅEçÏê}Ç™èIÇÌÇ¡ÇΩÇÁÅAÉVÅ[ÉgÇ≤Ç∆Ç…Ç©Ç©Ç¡ÇΩéûä‘Ç∆ê}å`ÇÃêîÇï\é¶ÇµÇ‹Ç∑
 '
 '  ècé≤
-'    ÅEÅuçHãÊÅvÅ®ÅuçHéñÅvÇÃ2íiÇ≈Ç∑ÅiÅuçHãÊÅvÇÃóÒÇ™ñ≥Ç¢Ç©ÅAÇ∑Ç◊ÇƒãÛóìÇ»ÇÁÅuçHéñÅvÇæÇØÅj
-'    ÅEï¿Ç—ÇÕçHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèáÇ≈Ç∑ÅBçHãÊÇ™ãÛóìÇÃçÏã∆ÇÕÅuã§í ÅvÇ…Ç‹Ç∆ÇﬂÇ‹Ç∑
+'    ÅEÅuñ⁄ìIÅvÅ®ÅuçHãÊÅvÅ®ÅuçHéñÅvÇÃ3íiÇ≈Ç∑ÅiÅuñ⁄ìIÅvÅuçHãÊÅvÇÃóÒÇ™ñ≥Ç¢Ç©ÅAÇ∑Ç◊ÇƒãÛóìÇ»ÇÁÅAÇªÇÃíiÇÕèoÇµÇ‹ÇπÇÒÅj
+'    ÅEï¿Ç—ÇÕñ⁄ìI Å® çHãÊ Å® çHéñÇÃèáÇ≈ÅAÇ«ÇÍÇ‡çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèáÇ≈Ç∑ÅBìØÇ∂çHãÊÇ≈Ç‡ñ⁄ìIÇ™à·Ç¶ÇŒÅA
+'      ÇªÇÍÇºÇÍÇÃñ⁄ìIÇÃíÜÇ…ï™ÇØÇƒíuÇ´Ç‹Ç∑
+'    ÅEñ⁄ìIÅEçHãÊÇ™ãÛóìÇÃçÏã∆ÇÕÅuã§í ÅvÇ…Ç‹Ç∆ÇﬂÇ‹Ç∑
 '
 '  ï∂éöÅiÉâÉxÉãÅj
 '    ÅEÅuï\é¶ñºÅvÇÃóÒÇ…ñºëOÇ™Ç†ÇÍÇŒÅAçÏã∆ñºÇÃë„ÇÌÇËÇ…ÇªÇÍÇèëÇ´Ç‹Ç∑ÅiÉZÉãÇÃíÜÇÃâ¸çsÇ‡ÇªÇÃÇ‹Ç‹Åj
@@ -76,7 +78,7 @@ Attribute VB_Name = "NetworkSchedule"
 '    ÅEó]óTì˙êîÇ∆ÉNÉäÉeÉBÉJÉãÉpÉXÇÕëSëÃÇ≈åvéZÇµÇ‹Ç∑ÅiÇ«ÇÃÉVÅ[ÉgÇ‡ìØÇ∂åãâ Åj
 '    ÅEä˙Ç≤Ç∆ÇÃÉVÅ[ÉgÇ≈ÇÕÅAëºÇÃä˙ÇÃçÏã∆Ç∆ÇÃÇ¬Ç»Ç™ÇËÇÅAè„ÇÃíiÅuëºÇÃä˙Ç©ÇÁÅvÅEâ∫ÇÃíi
 '      ÅuëºÇÃä˙Ç÷ÅvÇ…ì_ê¸ÇÃÅõÇ≈é¶ÇµÇ‹Ç∑ÅiÉâÉxÉãÇÕÅõÇÃâEÇ…èëÇ´ÅAèdÇ»ÇÈÇ∆Ç´ÇÕíiÇëùÇ‚ÇµÇ‹Ç∑Åj
-'    ÅEÇ‹Ç∆ÇﬂÇÕçHãÊÇ≤Ç∆Ç…ï™ÇØÇƒÅAç≈èâÇÃçÏã∆ÇÃçHãÊÅEçHéñÇÃçsÇ…íuÇ´Ç‹Ç∑ÅBÇ‹Ç∆ÇﬂÇÃíÜÇ≈
+'    ÅEÇ‹Ç∆ÇﬂÇÕñ⁄ìIÅEçHãÊÇ≤Ç∆Ç…ï™ÇØÇƒÅAç≈èâÇÃçÏã∆ÇÃñ⁄ìIÅEçHãÊÅEçHéñÇÃçsÇ…íuÇ´Ç‹Ç∑ÅBÇ‹Ç∆ÇﬂÇÃíÜÇ≈
 '      çÏã∆ÇÃÇ»Ç¢ä˙ä‘Åië“ÇøÅjÇÕì_ê¸Ç≈ï`Ç´Ç‹Ç∑
 '    ÅEìØÇ∂ì˙ÇÃÉ_É~Å[Ç™ìríÜÇÃíiÇÃåãçáì_Çí Ç¡ÇƒÇµÇ‹Ç§Ç∆Ç´ÇÕÅAåãçáì_ÇÃâ°Çí ÇµÇƒï`Ç´Ç‹Ç∑
 '
@@ -90,7 +92,7 @@ Private Const SETTING_SHEET As String = "ê›íË"
 Private Const HOLIDAY_SHEET As String = "ãxçHì˙"
 Private Const OVERALL_SHEET As String = "ëSëÃçHíˆ"
 Private Const DETAIL_SHEET As String = "è⁄ç◊çHíˆ"
-Private Const COMMON_ZONE As String = "ã§í "         ' çHãÊÇ™ãÛóìÇÃçÏã∆ÇÇ‹Ç∆ÇﬂÇÈçHãÊñº
+Private Const COMMON_ZONE As String = "ã§í "         ' çHãÊÅiñ⁄ìIÅjÇ™ãÛóìÇÃçÏã∆ÇÇ‹Ç∆ÇﬂÇÈñºëO
 Private Const MARK_NAME As String = "NW_GENERATED"   ' É}ÉNÉçÇ™çÏÇ¡ÇΩÉVÅ[ÉgÇÃñ⁄àÛÅiÉVÅ[Égì‡ÇÃñºëOÅj
 Private Const CLICK_TAG As String = "NWCLICK"        ' ÉNÉäÉbÉNÇ≈Ç¬Ç»ÇÆê}å`ÇÃñ⁄àÛÅië„ë÷ÉeÉLÉXÉgÇÃêÊì™Åj
 Private Const PICK_MARK As String = "NW_PICK"        ' ëIÇÒÇæëOÇÃçÏã∆ÇÃñ⁄àÛÇÃê}å`ñº
@@ -102,7 +104,8 @@ Private Const NODE_TAG As String = "NWNODE"          ' ìÆÇ©ÇπÇÈÅõÇÃñ⁄àÛÅië„ë÷ÉeÉ
 Private Const LABEL_COL_WIDTH As Double = 16    ' çHéññºÇÃóÒÇÃïù
 Private Const DAY_COL_WIDTH As Double = 3.4     ' ì˙íPà ÇÃÇ∆Ç´ÇÃ1ì˙ï™ÇÃóÒïù
 Private Const WEEK_COL_WIDTH As Double = 7      ' èTíPà ÇÃÇ∆Ç´ÇÃ1èTï™ÇÃóÒïù
-Private Const ZONE_COL_WIDTH As Double = 10     ' çHãÊñºÇÃóÒÅiAóÒÅjÇÃïùÅiçHãÊÇ™Ç†ÇÈÇ∆Ç´Åj
+Private Const ZONE_COL_WIDTH As Double = 10     ' çHãÊñºÇÃóÒÇÃïùÅiçHãÊÇ™Ç†ÇÈÇ∆Ç´Åj
+Private Const PURP_COL_WIDTH As Double = 12     ' ñ⁄ìIÇÃóÒÅiAóÒÅjÇÃïùÅiñ⁄ìIÇ™Ç†ÇÈÇ∆Ç´Åj
 Private Const LANE_HEIGHT As Double = 44        ' 1íiÇÃçÇÇ≥ÅiptÅj
 Private Const ARROW_OFFSET As Double = 24       ' íiÇÃè„í[Ç©ÇÁñÓê¸Ç‹Ç≈ÇÃãóó£ÅiptÅj
 Private Const NODE_D As Double = 12             ' åãçáì_ÅiÅõÅjÇÃíºåaÅiptÅj
@@ -130,7 +133,7 @@ Private Const KIND_SUM As Long = 3              ' Ç‹Ç∆ÇﬂÅiëSëÃçHíˆÅj
 
 ' ---- çÏã∆ÉfÅ[É^ÅiëSëÃÅj ----
 Private nAct As Long
-Private actKouji() As String, actPhase() As String, actGroup() As String, actZone() As String
+Private actKouji() As String, actPhase() As String, actGroup() As String, actZone() As String, actPurp() As String
 Private actId() As String, actName() As String, actDisp() As String, actCo() As String
 Private actDur() As Long, actDurKnown() As Boolean, actPredText() As String
 Private actStartIn() As Variant, actEndIn() As Variant, actProg() As Double, actRow() As Long
@@ -147,13 +150,15 @@ Private topo() As Long          ' êÊçsä÷åWÇéÁÇ¡ÇΩï¿Ç—èá
 Private nPhase As Long, phaseName() As String, actPhaseIdx() As Long
 Private phaseMinS() As Long, phaseMaxF() As Long, phaseLastDay() As Long, phaseLevel() As Long
 
-' ---- çHãÊ ----
+' ---- ñ⁄ìIÅEçHãÊ ----
 Private nZone As Long, zoneName() As String, actZoneIdx() As Long, useZones As Boolean
-Private pairRank As Object      ' "çHãÊ|çHéñ" Å® çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèá
+Private nPurp As Long, purpName() As String, actPurpIdx() As Long, usePurps As Boolean
+Private pairRank As Object      ' "ñ⁄ìI|çHãÊ|çHéñ" Å® çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèá
 
 ' ---- Ç‹Ç∆Çﬂ ----
 Private nGroup As Long, actGroupIdx() As Long
-Private gName() As String, gKouji() As String, gZone() As Long, gS() As Long, gF() As Long, gCrit() As Boolean
+Private gName() As String, gKouji() As String, gZone() As Long, gPurp() As Long
+Private gS() As Long, gF() As Long, gCrit() As Boolean
 Private gCoLabel() As String, gCoName() As String, gProg() As Double
 
 ' ---- âÔé–ÇÃêFÅEãxçHì˙ ----
@@ -166,8 +171,8 @@ Private itAct() As Long, itKind() As Long, itGroup() As Long, itS() As Long, itF
 Private actItem() As Long       ' çÏã∆ Å® Ç±ÇÃÉVÅ[ÉgÇÃçÄñ⁄Åi0ÅÅÇ±ÇÃÉVÅ[ÉgÇ…ñ≥Ç¢Åj
 Private ghostDict As Object     ' "éÌóﬁ|çÏã∆" Å® çÄñ⁄
 Private nLink As Long, lkFrom() As Long, lkTo() As Long, lkA() As Long, lkB() As Long, lkCrit() As Boolean
-Private nBand As Long, bandName() As String, bandZone() As Long, bandFirstLane() As Long, bandLastLane() As Long
-Private zoneFirstLane() As Long, zoneLastLane() As Long
+Private nBand As Long, bandName() As String, bandZone() As Long, bandPurp() As Long
+Private bandFirstLane() As Long, bandLastLane() As Long, bandSeq() As Long   ' bandSeqÅFë—Çè„Ç©ÇÁï¿Ç◊ÇΩèá
 Private nLane As Long, laneLastF() As Long, laneLastItem() As Long, laneOcc() As Collection
 ' ---- ÉâÉxÉãÇÃíuÇ´ï˚ÅiLayoutLabels Ç≈åàÇﬂÅADrawItems Ç≈égÇ§ÅBà íuÇÕì˙ïtñ⁄ê∑ÇËÇÃç∂í[Ç©ÇÁÇÃ ptÅj----
 Private lbNameTxt() As String, lbNameN() As Long, lbNameL() As Double, lbNameW() As Double, lbNameOff() As Double
@@ -186,7 +191,8 @@ Private sdFrom() As Long, sdTo() As Long, sdSlot() As Long
 Private wsC As Worksheet
 Private sheetMode As Long, isOverall As Boolean, useSummary As Boolean, sheetCaption As String
 Private viewStart As Long, viewEnd As Long, nCols As Long, daysPerCol As Long, dayW As Double
-Private labelCols As Long, dateCol As Long      ' ècé≤ÇÃóÒêîÅiçHãÊÇ™Ç†ÇÍÇŒ2ÅjÇ∆ÅAì˙ïtñ⁄ê∑ÇËÇÃäJénóÒ
+Private labelCols As Long, dateCol As Long      ' ècé≤ÇÃóÒêîÅiñ⁄ìIÅEçHãÊÅEçHéñÇÃÇ§ÇøégÇ§Ç‡ÇÃÅjÇ∆ÅAì˙ïtñ⁄ê∑ÇËÇÃäJénóÒ
+Private zoneCol As Long                         ' çHãÊÇÃóÒÅiçHãÊÇ™ñ≥ÇØÇÍÇŒ 0ÅjÅBñ⁄ìIÇ™Ç†ÇÍÇŒ AóÒÅAçHéñÇÕ labelCols óÒ
 Private nPhaseRows As Long, rowMonth As Long, rowDay As Long, rowWeekday As Long, firstLaneRow As Long
 Private legendRow As Long, legendLastRow As Long, shapeSeq As Long
 Private lastShape As Shape      ' ç≈å„Ç…çÏÇ¡ÇΩê}å`ÅiÉNÉäÉbÉNÇ≈Ç¬Ç»ÇÆàÛÇïtÇØÇÈÇΩÇﬂÅj
@@ -430,7 +436,7 @@ End Sub
 Private Function LoadData(ByVal ws As Worksheet) As Boolean
     Dim hdr As Long, r As Long, k As Long, lastRow As Long, v As Variant
     Dim cKouji As Long, cPhase As Long, cGroup As Long, cZone As Long, cId As Long, cName As Long, cCo As Long
-    Dim cDisp As Long
+    Dim cDisp As Long, cPurp As Long
     Dim cDur As Long, cPred As Long, cStart As Long, cEnd As Long, cProg As Long, cAS As Long, cAE As Long
 
     hdr = FindHeaderRow(ws, "çÏã∆ID")
@@ -442,6 +448,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     cPhase = FindCol(ws, hdr, "ä˙")
     cGroup = FindCol(ws, hdr, "Ç‹Ç∆Çﬂ")
     cZone = FindCol(ws, hdr, "çHãÊ")
+    cPurp = FindCol(ws, hdr, "ñ⁄ìI")
     cDisp = FindCol(ws, hdr, "ï\é¶ñº")
     cId = FindCol(ws, hdr, "çÏã∆ID")
     cName = FindCol(ws, hdr, "çÏã∆ñº")
@@ -469,6 +476,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     End If
 
     ReDim actKouji(1 To nAct): ReDim actPhase(1 To nAct): ReDim actGroup(1 To nAct): ReDim actZone(1 To nAct)
+    ReDim actPurp(1 To nAct)
     ReDim actId(1 To nAct): ReDim actName(1 To nAct): ReDim actDisp(1 To nAct): ReDim actCo(1 To nAct)
     ReDim actDur(1 To nAct): ReDim actDurKnown(1 To nAct): ReDim actPredText(1 To nAct)
     ReDim actStartIn(1 To nAct): ReDim actEndIn(1 To nAct): ReDim actProg(1 To nAct): ReDim actRow(1 To nAct)
@@ -487,6 +495,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
             If cPhase > 0 Then actPhase(k) = CellText(ws.Cells(r, cPhase).Value)
             If cGroup > 0 Then actGroup(k) = CellText(ws.Cells(r, cGroup).Value)
             If cZone > 0 Then actZone(k) = CellText(ws.Cells(r, cZone).Value)
+            If cPurp > 0 Then actPurp(k) = CellText(ws.Cells(r, cPurp).Value)
             actName(k) = CellText(ws.Cells(r, cName).Value)
             If cDisp > 0 Then actDisp(k) = CellText(ws.Cells(r, cDisp).Value)
             If cCo > 0 Then actCo(k) = CellText(ws.Cells(r, cCo).Value)
@@ -773,17 +782,22 @@ Private Sub CollectPhases()
     Next i
 End Sub
 
-' çHãÊÇÃàÍóóÅiçHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèáÅBãÛóìÇÕÅuã§í ÅvÅjÇ∆ÅAçHãÊÅEçHéñÇÃëgÇÃèáà ÅièoÇƒÇ´ÇΩèáÅj
+' çHãÊÇ∆ñ⁄ìIÇÃàÍóóÅiçHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèáÅBãÛóìÇÕÅuã§í ÅvÅjÇ∆ÅAñ⁄ìIÅEçHãÊÅEçHéñÇÃëgÇÃèáà ÅièoÇƒÇ´ÇΩèáÅj
 Private Sub CollectZones()
-    Dim dict As Object, i As Long, z As String, kk As String
+    Dim dict As Object, pDict As Object, i As Long, z As String, kk As String
 
     Set dict = CreateObject("Scripting.Dictionary")
+    Set pDict = CreateObject("Scripting.Dictionary")
     Set pairRank = CreateObject("Scripting.Dictionary")
     nZone = 0
+    nPurp = 0
     useZones = False
+    usePurps = False
     ReDim actZoneIdx(1 To nAct): ReDim zoneName(1 To nAct)
+    ReDim actPurpIdx(1 To nAct): ReDim purpName(1 To nAct)
     For i = 1 To nAct
         If Len(actZone(i)) > 0 Then useZones = True
+        If Len(actPurp(i)) > 0 Then usePurps = True
     Next i
     For i = 1 To nAct
         z = actZone(i)
@@ -794,12 +808,20 @@ Private Sub CollectZones()
             zoneName(nZone) = z
         End If
         actZoneIdx(i) = dict(z)
-        kk = actZoneIdx(i) & "|" & actKouji(i)
+        z = actPurp(i)
+        If Len(z) = 0 Then z = COMMON_ZONE
+        If Not pDict.Exists(z) Then
+            nPurp = nPurp + 1
+            pDict.Add z, nPurp
+            purpName(nPurp) = z
+        End If
+        actPurpIdx(i) = pDict(z)
+        kk = actPurpIdx(i) & "|" & actZoneIdx(i) & "|" & actKouji(i)
         If Not pairRank.Exists(kk) Then pairRank.Add kk, pairRank.Count + 1
     Next i
 End Sub
 
-' Ç‹Ç∆ÇﬂÅiì¸ÇÍéqÅjÇÃàÍóóÇ∆ÅAÇ‹Ç∆ÇﬂÇ≤Ç∆ÇÃä˙ä‘ÅEâÔé–ÅEêiíªÅiìØÇ∂ñºëOÇ≈Ç‡çHãÊÇ™à·Ç¶ÇŒï ÇÃÇ‹Ç∆ÇﬂÅj
+' Ç‹Ç∆ÇﬂÅiì¸ÇÍéqÅjÇÃàÍóóÇ∆ÅAÇ‹Ç∆ÇﬂÇ≤Ç∆ÇÃä˙ä‘ÅEâÔé–ÅEêiíªÅiìØÇ∂ñºëOÇ≈Ç‡ñ⁄ìIÇ©çHãÊÇ™à·Ç¶ÇŒï ÇÃÇ‹Ç∆ÇﬂÅj
 Private Sub CollectGroups()
     Dim dict As Object, coSet As Object, i As Long, g As Long, wsum As Double, psum As Double, key As String
 
@@ -808,16 +830,17 @@ Private Sub CollectGroups()
     ReDim actGroupIdx(1 To nAct)
     ReDim gName(1 To nAct): ReDim gKouji(1 To nAct): ReDim gS(1 To nAct): ReDim gF(1 To nAct)
     ReDim gCrit(1 To nAct): ReDim gCoLabel(1 To nAct): ReDim gCoName(1 To nAct): ReDim gProg(1 To nAct)
-    ReDim gZone(1 To nAct)
+    ReDim gZone(1 To nAct): ReDim gPurp(1 To nAct)
     For i = 1 To nAct
         If Len(actGroup(i)) > 0 Then
-            key = actZoneIdx(i) & "|" & actGroup(i)
+            key = actPurpIdx(i) & "|" & actZoneIdx(i) & "|" & actGroup(i)
             If Not dict.Exists(key) Then
                 nGroup = nGroup + 1
                 dict.Add key, nGroup
                 gName(nGroup) = actGroup(i)
                 gKouji(nGroup) = actKouji(i)
                 gZone(nGroup) = actZoneIdx(i)
+                gPurp(nGroup) = actPurpIdx(i)
                 gS(nGroup) = actS(i)
                 gF(nGroup) = actF(i)
             End If
@@ -1210,48 +1233,51 @@ End Sub
 '==============================================================================
 '  íiÇÃäÑÇËìñÇƒÇ∆åãçáì_
 '==============================================================================
-' çHãÊÅEçHéñÇ≤Ç∆Ç…Åiï¿Ç—ÇÕçHãÊÇÃèá Å® çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèáÅjÅAäJénì˙ÇÃëÅÇ¢èáÇ…íiÇ÷íuÇ≠ÅB
+' ñ⁄ìIÅEçHãÊÅEçHéñÇ≤Ç∆Ç…Åiï¿Ç—ÇÕñ⁄ìIÇÃèá Å® çHãÊÇÃèá Å® çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèáÅjÅAäJénì˙ÇÃëÅÇ¢èáÇ…íiÇ÷íuÇ≠ÅB
 ' èdÇ»ÇÈçÄñ⁄ÇÕíiÇï™ÇØÇÈÅB
 ' ëOÇÃçÄñ⁄ÇÃèIì_Ç∆éüÇÃçÄñ⁄ÇÃénì_Ç™ìØÇ∂ì˙Ç≈Ç‡ÅAÇªÇÃ2Ç¬Ç™íºê⁄Ç¬Ç»Ç™Ç¡ÇƒÇ¢Ç»ÇØÇÍÇŒåãçáì_Çã§óLÇµÇ»Ç¢ÅB
 ' ä˙ÇÃÉVÅ[ÉgÇ≈ÇÕÅAÇ¢ÇøÇŒÇÒè„Ç…ÅuëºÇÃä˙Ç©ÇÁÅvÅAÇ¢ÇøÇŒÇÒâ∫Ç…ÅuëºÇÃä˙Ç÷ÅvÇÃíiÇíuÇ≠
 ' ÅiëºÇÃä˙ÇÃçÏã∆ÇÃÉâÉxÉãÇ™èdÇ»ÇÈÇ∆Ç´ÇÕÅAÇªÇÃíÜÇ≈íiÇëùÇ‚Ç∑ÅjÅB
 Private Sub AssignLanes()
     Dim bandDict As Object, itBand() As Long, members() As Long, kk As String
-    Dim bandRank() As Long, bandOrd() As Long, bi As Long, z As Long
+    Dim bandKey() As Double, bi As Long
     Dim k As Long, b As Long, m As Long, j As Long, L As Long, cnt As Long, n As Long
     Dim placed As Boolean
 
     Set bandDict = CreateObject("Scripting.Dictionary")
-    ReDim bandName(1 To nItem): ReDim bandZone(1 To nItem): ReDim bandRank(1 To nItem)
-    ReDim bandOrd(1 To nItem): ReDim itBand(1 To nItem)
+    ReDim bandName(1 To nItem): ReDim bandZone(1 To nItem): ReDim bandPurp(1 To nItem): ReDim bandKey(1 To nItem)
+    ReDim bandSeq(1 To nItem): ReDim itBand(1 To nItem)
     nBand = 0
     For k = 1 To nItem
         If itKind(k) = KIND_ACT Or itKind(k) = KIND_SUM Then
-            kk = ItemZone(k) & "|" & ItemKouji(k)
+            kk = ItemPurp(k) & "|" & ItemZone(k) & "|" & ItemKouji(k)
             If Not bandDict.Exists(kk) Then
                 nBand = nBand + 1
                 bandDict.Add kk, nBand
                 bandName(nBand) = ItemKouji(k)
                 bandZone(nBand) = ItemZone(k)
-                bandRank(nBand) = pairRank(kk)
+                bandPurp(nBand) = ItemPurp(k)
+                ' ï¿Ç◊ÇÈèáÇÃílÅFñ⁄ìIÇÃèá Å® çHãÊÇÃèá Å® ñ⁄ìIÅEçHãÊÅEçHéñÇÃëgÇ™çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèá
+                bandKey(nBand) = (CDbl(bandPurp(nBand)) * (nZone + 1) + bandZone(nBand)) * (pairRank.Count + 1) _
+                                 + pairRank(kk)
             End If
             itBand(k) = bandDict(kk)
         End If
     Next k
 
-    ' ë—ÅiçHãÊÅEçHéñÅjÇÃï¿Ç—ÅFçHãÊÇÃèá Å® çHíˆÉfÅ[É^Ç…èoÇƒÇ´ÇΩèá
+    ' ë—Åiñ⁄ìIÅEçHãÊÅEçHéñÅjÇÃï¿Ç—
     For b = 1 To nBand
         m = b
         Do While m > 1
-            j = bandOrd(m - 1)
-            If bandZone(b) < bandZone(j) Or (bandZone(b) = bandZone(j) And bandRank(b) < bandRank(j)) Then
-                bandOrd(m) = j
+            j = bandSeq(m - 1)
+            If bandKey(b) < bandKey(j) Then
+                bandSeq(m) = j
                 m = m - 1
             Else
                 Exit Do
             End If
         Loop
-        bandOrd(m) = b
+        bandSeq(m) = b
     Next b
 
     ReDim bandFirstLane(1 To nBand): ReDim bandLastLane(1 To nBand)
@@ -1273,7 +1299,7 @@ Private Sub AssignLanes()
     End If
 
     For bi = 1 To nBand
-        b = bandOrd(bi)
+        b = bandSeq(bi)
         cnt = 0
         For k = 1 To nItem
             If itKind(k) = KIND_ACT Or itKind(k) = KIND_SUM Then
@@ -1322,14 +1348,6 @@ Private Sub AssignLanes()
         Next m
         bandLastLane(b) = nLane
     Next bi
-
-    ' çHãÊÇ≤Ç∆ÇÃíiÇÃîÕàÕÅiècé≤ÇÃçHãÊÇÃóÒÅjÅBÇ±ÇÃÉVÅ[ÉgÇ…çÏã∆ÇÃÇ»Ç¢çHãÊÇÕ 0 ÇÃÇ‹Ç‹
-    ReDim zoneFirstLane(1 To nZone): ReDim zoneLastLane(1 To nZone)
-    For b = 1 To nBand
-        z = bandZone(b)
-        If zoneFirstLane(z) = 0 Or bandFirstLane(b) < zoneFirstLane(z) Then zoneFirstLane(z) = bandFirstLane(b)
-        If bandLastLane(b) > zoneLastLane(z) Then zoneLastLane(z) = bandLastLane(b)
-    Next b
 
     ' ëºÇÃä˙Ç÷ÅiÇ¢ÇøÇŒÇÒâ∫Åj
     ghostToFirst = 0
@@ -1501,6 +1519,10 @@ End Function
 
 Private Function ItemZone(ByVal k As Long) As Long
     If itKind(k) = KIND_SUM Then ItemZone = gZone(itGroup(k)) Else ItemZone = actZoneIdx(itAct(k))
+End Function
+
+Private Function ItemPurp(ByVal k As Long) As Long
+    If itKind(k) = KIND_SUM Then ItemPurp = gPurp(itGroup(k)) Else ItemPurp = actPurpIdx(itAct(k))
 End Function
 
 Private Function ItemColor(ByVal k As Long) As Long
@@ -1708,15 +1730,15 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
         .Font.Size = 9
         .VerticalAlignment = xlCenter
     End With
-    ' ècé≤ÇÃóÒÅFçHãÊÇ™Ç†ÇÍÇŒ AóÒÅÅçHãÊÅEBóÒÅÅçHéñÅAñ≥ÇØÇÍÇŒ AóÒÅÅçHéñ
-    If useZones Then
-        labelCols = 2
-        wsC.Columns(1).ColumnWidth = ZONE_COL_WIDTH
-        wsC.Columns(2).ColumnWidth = LABEL_COL_WIDTH
-    Else
-        labelCols = 1
-        wsC.Columns(1).ColumnWidth = LABEL_COL_WIDTH
-    End If
+    ' ècé≤ÇÃóÒÅFç∂Ç©ÇÁñ⁄ìIÅEçHãÊÅEçHéñÅiñ⁄ìIÅEçHãÊÇ™ñ≥ÇØÇÍÇŒÅAÇªÇÃóÒÇÕçÏÇÁÇ»Ç¢Åj
+    labelCols = 1
+    If usePurps Then labelCols = labelCols + 1
+    If useZones Then labelCols = labelCols + 1
+    zoneCol = 0
+    If useZones Then zoneCol = labelCols - 1
+    If usePurps Then wsC.Columns(1).ColumnWidth = PURP_COL_WIDTH
+    If useZones Then wsC.Columns(zoneCol).ColumnWidth = ZONE_COL_WIDTH
+    wsC.Columns(labelCols).ColumnWidth = LABEL_COL_WIDTH
     dateCol = labelCols + 1
     SetDateColumns
     dayW = wsC.Cells(1, dateCol).Width / daysPerCol      ' 1ì˙ï™ÇÃïùÅiptÅj
@@ -1783,7 +1805,8 @@ End Function
 ' ï\ëËÅEì˙ïtñ⁄ê∑ÇËÅEñ‘ä|ÇØÅiìyì˙ÅEãxçHì˙ÅjÅEçHéññº
 Private Sub DrawGrid()
     Dim c As Long, d As Long, col As Long, lastCol As Long, lastLaneRow As Long
-    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean, z As Long
+    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean
+    Dim bi As Long, b1 As Long, runEnd As Boolean
     Dim sv As Variant, txt As String, created As Variant
     Dim vMon() As Variant, vDay() As Variant, vWk() As Variant, clr As Long, runClr As Long, runCol As Long
 
@@ -1800,12 +1823,9 @@ Private Sub DrawGrid()
     End With
 
     ' ì˙ïtñ⁄ê∑ÇËÇ∆ñ‘ä|ÇØ
-    If useZones Then
-        wsC.Cells(rowDay, 1).Value = "çHãÊ"
-        wsC.Cells(rowDay, 2).Value = "çHéñ"
-    Else
-        wsC.Cells(rowDay, 1).Value = "çHéñ"
-    End If
+    If usePurps Then wsC.Cells(rowDay, 1).Value = "ñ⁄ìI"
+    If useZones Then wsC.Cells(rowDay, zoneCol).Value = "çHãÊ"
+    wsC.Cells(rowDay, labelCols).Value = "çHéñ"
     ' ì˙ÅièTÅjÇÃã´ñ⁄ÇÃårê¸ÅFîñÇ¢äDêFÇÃç◊ê¸ÅBåãçáì_ÅiÅõÅjÇÕÇ±ÇÃê¸ÇÃè„Ç…èÊÇÈÅióÒÇ≤Ç∆Ç≈ÇÕÇ»Ç≠ÅAÇ‹Ç∆ÇﬂÇƒà¯Ç≠Åj
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(lastLaneRow, lastCol)).Borders(xlInsideVertical)
         .LineStyle = xlContinuous
@@ -1889,7 +1909,7 @@ Private Sub DrawGrid()
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
 
-    ' çHéññºÅiècé≤ÅBçHãÊÇ™Ç†ÇÈÇ∆Ç´ÇÕBóÒÅj
+    ' çHéññºÅiècé≤ÇÃÇ¢ÇøÇŒÇÒâEÇÃóÒÅj
     For b = 1 To nBand
         r1 = firstLaneRow + bandFirstLane(b) - 1
         r2 = firstLaneRow + bandLastLane(b) - 1
@@ -1906,35 +1926,70 @@ Private Sub DrawGrid()
             .Color = RGB(191, 191, 191)
         End With
     Next b
-    ' çHãÊñºÅiAóÒÅBçHãÊÇÃíiÇÇ‹Ç∆ÇﬂÇƒìhÇËÅAçHãÊÇÃã´ñ⁄ÇÕëæê¸Åj
+    ' çHãÊñºÇ∆ñ⁄ìIÅFè„â∫Ç…ë±Ç≠ë—ÇÃíiÇÇ‹Ç∆ÇﬂÇƒìhÇÈÅBã´ñ⁄ÇÃê¸ÇÕçHãÊÇ™ëæê¸ÅAñ⁄ìIÇÕÇ‡Ç¡Ç∆ëæÇ¢ê¸
+    ' ÅiçHãÊÇÕñ⁄ìIÇÃíÜÇ≈ï™ÇØÇÈÅBìØÇ∂çHãÊÇ≈Ç‡ñ⁄ìIÇ™à·Ç¶ÇŒï ÇÃóìÅBê¸Ç™èdÇ»ÇÈñ⁄ìIÇÃã´ñ⁄ÇÕÅAÇ†Ç∆Ç©ÇÁà¯Ç¢Çƒè„èëÇ´Ç∑ÇÈÅj
     If useZones Then
-        For z = 1 To nZone
-            If zoneFirstLane(z) > 0 Then
-                r1 = firstLaneRow + zoneFirstLane(z) - 1
-                r2 = firstLaneRow + zoneLastLane(z) - 1
-                With wsC.Range(wsC.Cells(r1, 1), wsC.Cells(r2, 1))
-                    If r2 > r1 Then .Merge
-                    .WrapText = True
-                    .HorizontalAlignment = xlCenter
-                    .VerticalAlignment = xlCenter
-                    .Font.Bold = True
-                    .Interior.Color = RGB(237, 242, 249)
-                    With .Borders(xlEdgeRight)
-                        .LineStyle = xlContinuous
-                        .Color = RGB(191, 191, 191)
-                    End With
-                End With
-                wsC.Cells(r1, 1).Value = "'" & zoneName(z)
-                With wsC.Range(wsC.Cells(r2, 1), wsC.Cells(r2, lastCol)).Borders(xlEdgeBottom)
-                    .LineStyle = xlContinuous
-                    .Weight = xlMedium
-                    .Color = RGB(89, 89, 89)
-                End With
+        b1 = 1
+        For bi = 1 To nBand
+            b = bandSeq(bi)
+            If bi = nBand Then
+                runEnd = True
+            Else
+                runEnd = (bandZone(bandSeq(bi + 1)) <> bandZone(b) Or bandPurp(bandSeq(bi + 1)) <> bandPurp(b))
             End If
-        Next z
+            If runEnd Then
+                LabelRun zoneCol, bandFirstLane(bandSeq(b1)), bandLastLane(b), zoneName(bandZone(b)), _
+                         RGB(237, 242, 249), RGB(0, 0, 0), xlMedium, RGB(89, 89, 89), lastCol
+                b1 = bi + 1
+            End If
+        Next bi
+    End If
+    If usePurps Then
+        b1 = 1
+        For bi = 1 To nBand
+            b = bandSeq(bi)
+            If bi = nBand Then
+                runEnd = True
+            Else
+                runEnd = (bandPurp(bandSeq(bi + 1)) <> bandPurp(b))
+            End If
+            If runEnd Then
+                LabelRun 1, bandFirstLane(bandSeq(b1)), bandLastLane(b), purpName(bandPurp(b)), _
+                         RGB(217, 225, 242), RGB(31, 56, 100), xlThick, RGB(64, 64, 64), lastCol
+                b1 = bi + 1
+            End If
+        Next bi
     End If
     If ghostFromFirst > 0 Then LabelGhostLanes ghostFromFirst, ghostFromLast, "ëºÇÃä˙Ç©ÇÁ", lastCol
     If ghostToFirst > 0 Then LabelGhostLanes ghostToFirst, ghostToLast, "ëºÇÃä˙Ç÷", lastCol
+End Sub
+
+' ècé≤ÇÃçHãÊÅEñ⁄ìIÇÃóìÅFcol óÒÇÃíi L1Å`L2 ÇåãçáÇµÇƒìhÇËÅAñºëOÇèëÇ´ÅAóìÇÃâ∫Ç…ã´ñ⁄ÇÃê¸Çà¯Ç≠Åicol óÒÇ©ÇÁâEí[Ç‹Ç≈Åj
+Private Sub LabelRun(ByVal col As Long, ByVal L1 As Long, ByVal L2 As Long, ByVal txt As String, _
+                     ByVal fillClr As Long, ByVal txtClr As Long, ByVal lineWt As Long, ByVal lineClr As Long, _
+                     ByVal lastCol As Long)
+    Dim r1 As Long, r2 As Long
+    r1 = firstLaneRow + L1 - 1
+    r2 = firstLaneRow + L2 - 1
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(r2, col))
+        If r2 > r1 Then .Merge
+        .WrapText = True
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Font.Bold = True
+        .Font.Color = txtClr
+        .Interior.Color = fillClr
+        With .Borders(xlEdgeRight)
+            .LineStyle = xlContinuous
+            .Color = RGB(191, 191, 191)
+        End With
+    End With
+    wsC.Cells(r1, col).Value = "'" & txt          ' Åu1-2ÅvÇ»Ç«Ç™ì˙ïtÇ…Ç»ÇÁÇ»Ç¢ÇÊÇ§ï∂éöóÒÇ≈
+    With wsC.Range(wsC.Cells(r2, col), wsC.Cells(r2, lastCol)).Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .Weight = lineWt
+        .Color = lineClr
+    End With
 End Sub
 
 Private Sub LabelGhostLanes(ByVal L1 As Long, ByVal L2 As Long, ByVal txt As String, ByVal lastCol As Long)
