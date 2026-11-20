@@ -1,5 +1,6 @@
 """NetworkSchedule.bas（表示名・ラベルの折り返し・日付の罫線）と同じ手順を再現し、完成イメージを描く。
-ラベルは自分の矢線の中央に置き、隣を押しのけない。使える幅に入らなければ折り返し、その段を高くする。"""
+ラベルは自分の矢線の中央に置き、隣を押しのけない。使える幅に入らなければ折り返し、その段を高くする。
+縦軸は 目的 → 工区 → 工事 の3段（目的・工区が無ければ、その列は描かない）。"""
 import datetime as dt
 import json
 import sys
@@ -25,32 +26,33 @@ plt.rcParams["font.family"] = next((f for f in ["Noto Sans CJK JP", "Yu Gothic",
 
 NAME_FONT, SUB_FONT, GAP, LINE_PITCH = 8.0, 7.0, 2.0, 1.75
 INAZUMA = "#E6007E"  # イナズマ線（クリティカルパスの赤と見分ける）
+PURP_FILL, PURP_TXT, PURP_LINE = "#D9E1F2", "#1F3864", "#404040"  # 目的の欄の塗り・文字、目的の境目の線
 DAY_W, LANE_H, ARROW_OFF, NODE_D = 24.0, 44.0, 24.0, 12.0
 R = NODE_D / 2
 BASE = dt.date(2027, 1, 12)
-SAMPLE5 = [  # 工区, 工事, 期, まとめ, 作業ID, 作業名, 表示名, 会社, 日数, 先行作業
-    ("共通", "準備・仮設工事", "1期", "準備・仮設一式", "A-010", "現地調査・墨出し", "", "○○建設", 3, ""),
-    ("共通", "準備・仮設工事", "1期", "準備・仮設一式", "A-020", "仮設足場組立・養生シート張り", "", "○○建設", 3, "A-010"),
-    ("第1工区", "撤去工事", "1期", "撤去一式", "B1-010", "停電・安全措置・作業区画の養生", "", "○○電設", 1, "A-020"),
-    ("第1工区", "撤去工事", "1期", "撤去一式", "B1-020", "既設機器の解体撤去・搬出", "", "○○建設", 4, "B1-010"),
-    ("第1工区", "基礎・架台工事", "1期", "", "C1-010", "既設基礎はつり補修・新設架台据付", "", "○○建設", 5, "B1-020"),
-    ("第1工区", "機器据付工事", "2期", "", "D1-010", "新設盤の搬入・据付・レベル調整", "", "○○電機", 4, "C1-010"),
-    ("第1工区", "電気工事", "1期", "電気一式", "E1-010", "ケーブルラック新設・幹線ケーブル配線", "", "○○電設", 5, "B1-020"),
-    ("第1工区", "電気工事", "2期", "電気一式", "E1-020", "端末処理・結線", "", "○○電設", 2, "D1-010,E1-010"),
-    ("第1工区", "試験・調整", "2期", "", "F1-010", "単体試験", "", "○○電機", 2, "E1-020"),
-    ("第2工区", "撤去工事", "1期", "撤去一式", "B2-010", "停電・安全措置・作業区画の養生", "停電・安全措置", "○○電設", 1, "B1-020"),
-    ("第2工区", "撤去工事", "1期", "撤去一式", "B2-020", "既設機器の解体撤去・搬出", "機器撤去", "○○建設", 4, "B2-010"),
-    ("第2工区", "基礎・架台工事", "1期", "", "C2-010", "既設基礎はつり補修・新設架台据付", "基礎補修\n架台据付", "○○建設", 5,
+SAMPLE5 = [  # 目的, 工区, 工事, 期, まとめ, 作業ID, 作業名, 表示名, 会社, 日数, 先行作業
+    ("工事の準備", "共通", "準備・仮設工事", "1期", "準備・仮設一式", "A-010", "現地調査・墨出し", "", "○○建設", 3, ""),
+    ("工事の準備", "共通", "準備・仮設工事", "1期", "準備・仮設一式", "A-020", "仮設足場組立・養生シート張り", "", "○○建設", 3, "A-010"),
+    ("老朽設備の更新", "第1工区", "撤去工事", "1期", "撤去一式", "B1-010", "停電・安全措置・作業区画の養生", "", "○○電設", 1, "A-020"),
+    ("老朽設備の更新", "第1工区", "撤去工事", "1期", "撤去一式", "B1-020", "既設機器の解体撤去・搬出", "", "○○建設", 4, "B1-010"),
+    ("老朽設備の更新", "第1工区", "基礎・架台工事", "1期", "", "C1-010", "既設基礎はつり補修・新設架台据付", "", "○○建設", 5, "B1-020"),
+    ("老朽設備の更新", "第1工区", "機器据付工事", "2期", "", "D1-010", "新設盤の搬入・据付・レベル調整", "", "○○電機", 4, "C1-010"),
+    ("老朽設備の更新", "第1工区", "電気工事", "1期", "電気一式", "E1-010", "ケーブルラック新設・幹線ケーブル配線", "", "○○電設", 5, "B1-020"),
+    ("老朽設備の更新", "第1工区", "電気工事", "2期", "電気一式", "E1-020", "端末処理・結線", "", "○○電設", 2, "D1-010,E1-010"),
+    ("老朽設備の更新", "第1工区", "試験・調整", "2期", "", "F1-010", "単体試験", "", "○○電機", 2, "E1-020"),
+    ("老朽設備の更新", "第2工区", "撤去工事", "1期", "撤去一式", "B2-010", "停電・安全措置・作業区画の養生", "停電・安全措置", "○○電設", 1, "B1-020"),
+    ("老朽設備の更新", "第2工区", "撤去工事", "1期", "撤去一式", "B2-020", "既設機器の解体撤去・搬出", "機器撤去", "○○建設", 4, "B2-010"),
+    ("老朽設備の更新", "第2工区", "基礎・架台工事", "1期", "", "C2-010", "既設基礎はつり補修・新設架台据付", "基礎補修\n架台据付", "○○建設", 5,
      "B2-020,C1-010"),
-    ("第2工区", "機器据付工事", "2期", "", "D2-010", "新設盤の搬入・据付・レベル調整", "盤搬入・据付", "○○電機", 4, "C2-010,D1-010"),
-    ("第2工区", "電気工事", "1期", "電気一式", "E2-010", "ケーブルラック新設・幹線ケーブル配線", "ラック・幹線配線", "○○電設", 5,
+    ("老朽設備の更新", "第2工区", "機器据付工事", "2期", "", "D2-010", "新設盤の搬入・据付・レベル調整", "盤搬入・据付", "○○電機", 4, "C2-010,D1-010"),
+    ("老朽設備の更新", "第2工区", "電気工事", "1期", "電気一式", "E2-010", "ケーブルラック新設・幹線ケーブル配線", "ラック・幹線配線", "○○電設", 5,
      "B2-020,E1-010"),
-    ("第2工区", "電気工事", "2期", "電気一式", "E2-020", "端末処理・結線", "結線", "○○電設", 2, "D2-010,E2-010,E1-020"),
-    ("第2工区", "試験・調整", "2期", "", "F2-010", "単体試験", "", "○○電機", 2, "E2-020,F1-010"),
-    ("共通", "試験・調整", "2期", "総合試運転・検査", "F-020", "総合試運転・各種性能確認", "", "○○電機", 3, "F1-010,F2-010"),
-    ("共通", "準備・仮設工事", "2期", "", "A-030", "足場解体・片付け・清掃", "", "○○建設", 2, "F-020"),
-    ("共通", "試験・調整", "2期", "総合試運転・検査", "F-030", "竣工検査", "", "○○建設", 1, "F-020,A-030"),
-    ("共通", "試験・調整", "2期", "", "F-040", "引渡し", "", "○○建設", 0, "F-030"),
+    ("老朽設備の更新", "第2工区", "電気工事", "2期", "電気一式", "E2-020", "端末処理・結線", "結線", "○○電設", 2, "D2-010,E2-010,E1-020"),
+    ("老朽設備の更新", "第2工区", "試験・調整", "2期", "", "F2-010", "単体試験", "", "○○電機", 2, "E2-020,F1-010"),
+    ("竣工・引渡し", "共通", "試験・調整", "2期", "総合試運転・検査", "F-020", "総合試運転・各種性能確認", "", "○○電機", 3, "F1-010,F2-010"),
+    ("竣工・引渡し", "共通", "準備・仮設工事", "2期", "", "A-030", "足場解体・片付け・清掃", "", "○○建設", 2, "F-020"),
+    ("竣工・引渡し", "共通", "試験・調整", "2期", "総合試運転・検査", "F-030", "竣工検査", "", "○○建設", 1, "F-020,A-030"),
+    ("竣工・引渡し", "共通", "試験・調整", "2期", "", "F-040", "引渡し", "", "○○建設", 0, "F-030"),
 ]
 
 
@@ -60,12 +62,13 @@ def make_acts(rows=SAMPLE5):
     while remaining:
         moved = False
         for i in list(remaining):
-            z, k, p, g, aid, nm, disp, co, d, pr = rows[i]
+            pu, z, k, p, g, aid, nm, disp, co, d, pr = rows[i]
             ps = parse_preds(pr)
             if all(q in fin for q in ps):
                 s = max([fin[q] for q in ps], default=BASE.toordinal())
                 fin[aid] = s if d == 0 else s + d
-                out[i] = dict(zone=z, kouji=k, phase=p, group=g, id=aid, name=nm, disp=disp, co=co, dur=d, pred=pr,
+                out[i] = dict(purpose=pu, zone=z, kouji=k, phase=p, group=g, id=aid, name=nm, disp=disp, co=co, dur=d,
+                              pred=pr,
                               start=dt.date.fromordinal(s), end=dt.date.fromordinal(s if d == 0 else s + d - 1),
                               prog=0.0)
                 remaining.remove(i)
@@ -366,8 +369,10 @@ def layout_labels(acts, c, ph, gr, zn, sh, day_w=DAY_W):
 
 def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption, grid=True, button=False, marks=(),
            prog=None):
+    PURP_W = 84.0 if zn["puse"] else 0.0
     ZONE_W = 70.0 if zn["use"] else 0.0
-    LABEL_W, X0 = ZONE_W + 110.0, 10.0
+    LABEL_W, X0 = PURP_W + ZONE_W + 110.0, 10.0
+    XZ, XK = X0 + PURP_W, X0 + PURP_W + ZONE_W  # 工区の列・工事の列の左端
     items = sh["items"]
     vs = sh["view_start"]
     icrit = sh["icrit"]
@@ -484,11 +489,11 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
                 color="white" if is_t else (RED if wd == 0 else "#000000"), weight="bold" if is_t else "normal")
     ax.plot([X0, right], [lanes_top, lanes_top], color="#7F7F7F", lw=0.8)
     ax.plot([date_left, date_left], [row_month, chart_bottom], color="#7F7F7F", lw=0.8)
+    if zn["puse"]:
+        ax.text(X0 + 4, row_day + 7, "目的", fontsize=8, va="center")
     if zn["use"]:
-        ax.text(X0 + 4, row_day + 7, "工区", fontsize=8, va="center")
-        ax.text(X0 + ZONE_W + 4, row_day + 7, "工事", fontsize=8, va="center")
-    else:
-        ax.text(X0 + 4, row_day + 7, "工事", fontsize=8, va="center")
+        ax.text(XZ + 4, row_day + 7, "工区", fontsize=8, va="center")
+    ax.text(XK + 4, row_day + 7, "工事", fontsize=8, va="center")
 
     if levels:
         ax.text(X0 + 4, row_phase + 8, "期", fontsize=9, va="center")
@@ -502,16 +507,26 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
 
     for b in sh["band_order"]:
         t, btm = lane_top[sh["band_first"][b]], lane_top[sh["band_last"][b] + 1]
-        ax.text(X0 + ZONE_W + 6, (t + btm) / 2, sh["bands"][b][1], fontsize=9, va="center")
-        ax.plot([X0 + ZONE_W, right], [btm, btm], color="#BFBFBF", lw=0.8, zorder=1)
+        ax.text(XK + 6, (t + btm) / 2, sh["bands"][b][2], fontsize=9, va="center")
+        ax.plot([XK, right], [btm, btm], color="#BFBFBF", lw=0.8, zorder=1)
+    # 工区と目的の欄は、上下に続く帯ごと（同じ工区でも目的が違えば別の欄）。境目の線は工区が太線、目的はもっと太い線
     if zn["use"]:
-        for z, (l1, l2) in sorted(sh["zone_rng"].items()):
+        for (_, z), l1, l2 in sh["zone_runs"]:
             t, btm = lane_top[l1], lane_top[l2 + 1]
-            ax.add_patch(Rectangle((X0, t), ZONE_W, btm - t, facecolor=ZONE_FILL, edgecolor="none", zorder=0.5))
-            ax.text(X0 + ZONE_W / 2, (t + btm) / 2, zn["names"][z - 1], fontsize=9, weight="bold",
+            ax.add_patch(Rectangle((XZ, t), ZONE_W, btm - t, facecolor=ZONE_FILL, edgecolor="none", zorder=0.5))
+            ax.text(XZ + ZONE_W / 2, (t + btm) / 2, zn["names"][z - 1], fontsize=9, weight="bold",
                     ha="center", va="center", zorder=2)
-            ax.plot([X0 + ZONE_W, X0 + ZONE_W], [t, btm], color="#BFBFBF", lw=0.8, zorder=1)
-            ax.plot([X0, right], [btm, btm], color="#595959", lw=1.5, zorder=1.5)
+            ax.plot([XK, XK], [t, btm], color="#BFBFBF", lw=0.8, zorder=1)
+            ax.plot([XZ, right], [btm, btm], color="#595959", lw=1.5, zorder=1.5)
+    if zn["puse"]:
+        for pu, l1, l2 in sh["purp_runs"]:
+            t, btm = lane_top[l1], lane_top[l2 + 1]
+            ax.add_patch(Rectangle((X0, t), PURP_W, btm - t, facecolor=PURP_FILL, edgecolor="none", zorder=0.5))
+            ax.text(X0 + PURP_W / 2, (t + btm) / 2, "\n".join(wrap_para(zn["pnames"][pu - 1], PURP_W - 8, 9)),
+                    fontsize=9, weight="bold", color=PURP_TXT, ha="center", va="center", multialignment="center",
+                    linespacing=1.3, zorder=2)
+            ax.plot([XZ, XZ], [t, btm], color="#BFBFBF", lw=0.8, zorder=1)
+            ax.plot([X0, right], [btm, btm], color=PURP_LINE, lw=2.4, zorder=1.6)
     for rng, txt in ((sh["from_rng"], "他の期から"), (sh["to_rng"], "他の期へ")):
         if rng is not None:
             t, btm = lane_top[rng[0]], lane_top[rng[1] + 1]

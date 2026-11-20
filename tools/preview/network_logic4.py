@@ -1,5 +1,6 @@
 """NetworkSchedule.bas（工区 対応版）と同じ手順を再現し、完成イメージを描く。
-縦軸は 工区 → 工事 の2段。まとめは工区ごと。まとめの中で作業のない期間は点線。"""
+縦軸は 工区 → 工事 の2段。まとめは工区ごと。まとめの中で作業のない期間は点線。
+（目的の段は collect_zones・build_sheet だけが扱う。目的の列を描くのは network_logic5 の render）"""
 import datetime as dt
 import json
 import sys
@@ -70,27 +71,33 @@ def make_acts(rows=SAMPLE4):
 
 
 def collect_zones(acts):
-    """工区の一覧（出てきた順、空欄は「共通」）と、工区・工事の組の順位（出てきた順）"""
+    """工区と目的の一覧（出てきた順、空欄は「共通」）と、目的・工区・工事の組の順位（出てきた順）"""
     use = any(a.get("zone") for a in acts)
-    names, idx, rank = [], [], {}
+    puse = any(a.get("purpose") for a in acts)
+    names, idx, pnames, pidx, rank = [], [], [], [], {}
     for a in acts:
         z = a.get("zone") or COMMON
         if z not in names:
             names.append(z)
         zi = names.index(z) + 1
         idx.append(zi)
-        if (zi, a["kouji"]) not in rank:
-            rank[(zi, a["kouji"])] = len(rank) + 1
-    return dict(use=use, names=names, idx=idx, rank=rank)
+        p = a.get("purpose") or COMMON
+        if p not in pnames:
+            pnames.append(p)
+        pi = pnames.index(p) + 1
+        pidx.append(pi)
+        if (pi, zi, a["kouji"]) not in rank:
+            rank[(pi, zi, a["kouji"])] = len(rank) + 1
+    return dict(use=use, names=names, idx=idx, puse=puse, pnames=pnames, pidx=pidx, rank=rank)
 
 
 def collect_groups(acts, c, zn):
-    """まとめは工区ごとに分ける（同じ名前でも工区が違えば別のまとめ）"""
+    """まとめは目的・工区ごとに分ける（同じ名前でも目的か工区が違えば別のまとめ）"""
     keys, gidx = [], []
     for i, a in enumerate(acts):
         g = a.get("group", "")
         if g:
-            key = (zn["idx"][i], g)
+            key = (zn["pidx"][i], zn["idx"][i], g)
             if key not in keys:
                 keys.append(key)
             gidx.append(keys.index(key) + 1)
@@ -105,7 +112,8 @@ def collect_groups(acts, c, zn):
                 cos.append(acts[i]["co"])
         w = sum(c["F"][i] - c["S"][i] for i in mem)
         p = sum(acts[i]["prog"] * (c["F"][i] - c["S"][i]) for i in mem)
-        G[g] = dict(name=keys[g - 1][1], zone=keys[g - 1][0], kouji=acts[mem[0]]["kouji"], members=mem,
+        G[g] = dict(name=keys[g - 1][2], zone=keys[g - 1][1], purpose=keys[g - 1][0], kouji=acts[mem[0]]["kouji"],
+                    members=mem,
                     S=min(c["S"][i] for i in mem), F=max(c["F"][i] for i in mem),
                     crit=any(c["crit"][i] for i in mem),
                     co_label=(cos[0] if len(cos) == 1 else (f"{cos[0]}ほか{len(cos) - 1}社" if cos else "")),
@@ -234,18 +242,21 @@ def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
     def izone(it):
         return gr["G"][it["group"]]["zone"] if it["kind"] == KIND_SUM else zn["idx"][it["act"]]
 
+    def ipurp(it):
+        return gr["G"][it["group"]]["purpose"] if it["kind"] == KIND_SUM else zn["pidx"][it["act"]]
+
     def ikouji(it):
         return gr["G"][it["group"]]["kouji"] if it["kind"] == KIND_SUM else acts[it["act"]]["kouji"]
 
-    # 縦軸の帯：工区・工事の組。並びは（工区の順, 工程データに出てきた順）
+    # 縦軸の帯：目的・工区・工事の組。並びは（目的の順, 工区の順, 工程データに出てきた順）
     bands, band_of = [], {}
     for k, it in enumerate(items):
         if it["kind"] in (KIND_ACT, KIND_SUM):
-            key = (izone(it), ikouji(it))
+            key = (ipurp(it), izone(it), ikouji(it))
             if key not in bands:
                 bands.append(key)
             band_of[k] = bands.index(key)
-    band_order = sorted(range(len(bands)), key=lambda b: (bands[b][0], zn["rank"][bands[b]]))
+    band_order = sorted(range(len(bands)), key=lambda b: (bands[b][0], bands[b][1], zn["rank"][bands[b]]))
 
     occ, lastF, lastK = [], [], []
     n_from = stack(KIND_FROM, 0)
@@ -286,11 +297,18 @@ def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
                 it["lane"] = len(occ) - 1
         band_first[b] = first
         band_last[b] = len(occ) - 1
-    zone_rng = {}
+    # 縦軸の工区・目的の欄：上下に続く帯をまとめる（同じ工区でも目的が違えば別の欄）
+    zone_runs, purp_runs = [], []  # [(目的, 工区), 最初の段, 最後の段]、[目的, 最初の段, 最後の段]
     for b in band_order:
-        z = bands[b][0]
-        lo, hi = zone_rng.get(z, (band_first[b], band_last[b]))
-        zone_rng[z] = (min(lo, band_first[b]), max(hi, band_last[b]))
+        pz = bands[b][:2]
+        if zone_runs and zone_runs[-1][0] == pz:
+            zone_runs[-1][2] = band_last[b]
+        else:
+            zone_runs.append([pz, band_first[b], band_last[b]])
+        if purp_runs and purp_runs[-1][0] == pz[0]:
+            purp_runs[-1][2] = band_last[b]
+        else:
+            purp_runs.append([pz[0], band_first[b], band_last[b]])
     first_to = len(occ)
     n_to = stack(KIND_TO, first_to)
     for _ in range(n_to):
@@ -438,7 +456,8 @@ def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
                 prims.append(("diag", fa, La, sb, Lb, "gray"))
 
     return dict(seg_crit=seg_crit, seg_busy=seg_busy, label_span=label_span, mode=mode, overall=overall, use_sum=use_sum, items=items,
-                bands=bands, band_order=band_order, band_first=band_first, band_last=band_last, zone_rng=zone_rng,
+                bands=bands, band_order=band_order, band_first=band_first, band_last=band_last, zone_runs=zone_runs,
+                purp_runs=purp_runs,
                 nlane=len(occ), from_rng=(0, n_from - 1) if n_from else None,
                 to_rng=(first_to, first_to + n_to - 1) if n_to else None,
                 nodes=nodes, prims=prims, links=links, view_start=vs, view_end=ve, icrit=icrit)
@@ -569,11 +588,11 @@ def render(acts, c, ph, gr, zn, sh, colors, co_order, path, title, caption):
     for b in sh["band_order"]:
         t = lanes_top + sh["band_first"][b] * LANE_H
         btm = lanes_top + (sh["band_last"][b] + 1) * LANE_H
-        ax.text(X0 + ZONE_W + 6, (t + btm) / 2, sh["bands"][b][1], fontsize=9, va="center")
+        ax.text(X0 + ZONE_W + 6, (t + btm) / 2, sh["bands"][b][2], fontsize=9, va="center")
         ax.plot([X0 + ZONE_W, right], [btm, btm], color="#BFBFBF", lw=0.8, zorder=1)
     # 縦軸：工区（A列を結合して塗る。工区の下は太線）
     if zn["use"]:
-        for z, (l1, l2) in sorted(sh["zone_rng"].items()):
+        for (_, z), l1, l2 in sh["zone_runs"]:
             t = lanes_top + l1 * LANE_H
             btm = lanes_top + (l2 + 1) * LANE_H
             ax.add_patch(Rectangle((X0, t), ZONE_W, btm - t, facecolor=ZONE_FILL, edgecolor="none", zorder=0.5))
@@ -769,7 +788,7 @@ if __name__ == "__main__":
     ph = collect_phases(acts, c)
     zn = collect_zones(acts)
     gr = collect_groups(acts, c, zn)
-    print("zones:", zn["names"], "rank:", {f"{zn['names'][k[0] - 1]}|{k[1]}": v for k, v in zn["rank"].items()})
+    print("zones:", zn["names"], "rank:", {f"{zn['names'][k[1] - 1]}|{k[2]}": v for k, v in zn["rank"].items()})
     for g, G in gr["G"].items():
         print(f"  group {g}: {zn['names'][G['zone'] - 1]} / {G['name']} {fmt(G['S'])}〜{fmt(G['F'] - 1)} "
               f"crit={G['crit']} co={G['co_label']} members={[acts[i]['id'] for i in G['members']]}")
@@ -780,7 +799,7 @@ if __name__ == "__main__":
         sh = build_sheet(acts, c, ph, gr, zn, mode)
         nn = render(acts, c, ph, gr, zn, sh, colors, co_order, f"{outdir}/preview4_{nm}.png", title, cap)
         print(f"{nm}: items={len(sh['items'])} lanes={sh['nlane']} nodes={nn} links={len(sh['links'])} "
-              f"bands={[(zn['names'][sh['bands'][b][0] - 1], sh['bands'][b][1], sh['band_first'][b], sh['band_last'][b]) for b in sh['band_order']]}")
+              f"bands={[(zn['names'][sh['bands'][b][1] - 1], sh['bands'][b][2], sh['band_first'][b], sh['band_last'][b]) for b in sh['band_order']]}")
         print("   prims:", [p[0] for p in sh["prims"]])
     with open(f"{outdir}/sample4.json", "w", encoding="utf-8") as fp:
         json.dump([dict(a, start=a["start"].isoformat(), end=a["end"].isoformat()) for a in acts],
