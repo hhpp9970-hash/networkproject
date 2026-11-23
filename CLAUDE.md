@@ -60,19 +60,23 @@ Excel の VBA で、工事のネットワーク工程表（矢線式・時間軸
 
 ## マクロの構造
 
-公開している入口：`DrawNetworkSchedule`（作図）、`ExportSchedulePdf`（PDF）、`NS_ClickItem`（図形のクリック。OnAction）。
+公開している入口：`DrawNetworkSchedule`（作図）、`ExportSchedulePdf`（PDF。ロードマップは入れない）、`NS_ClickItem`（図形のクリック。OnAction）。
 
 ```
 DrawNetworkSchedule
   SpeedOn → ApplyMovedNodes（動かした○を工程データへ）→ LoadData → LoadHolidays → BuildLinks → SortByLinks
   → CalcDates →（PushSuccessors）→ CalcFloat → CheckLogic → CheckDates → CollectPhases → CollectZones
   → CollectGroups → LoadCompanyColors → CalcProgress → WriteResults → DeleteGeneratedSheets
-  → DrawSheet(0：全体) →［DrawSheet(-1：詳細。期がなくまとめがあるとき)］→ DrawSheet(1..期の数) → SpeedOff → メッセージ
+  → DrawSheet(0：全体) →［DrawSheet(-1：詳細。期がなくまとめがあるとき)］→ DrawSheet(1..期の数) → DrawRoadmap
+  → SpeedOff → メッセージ
 
 DrawSheet
   SetViewRange → AddGhosts → BuildSheetLinks → CreateChartSheet → AssignLanes → RegisterNodes
   → FitColumns（LayoutLabels）→ SetRowHeights → DrawGrid → DrawPhaseBars → DrawProgressLine
   → DrawItems → DrawLinks → DrawNodes → DrawLegend → FinishSheet
+
+DrawRoadmap（v12）
+  RoadRows（行）→［RoadAmounts（年度ごとの金額）］→ シート・見出し・罫線 → RoadPhaseBars → RoadBars → 印刷の設定
 ```
 
 - 作業は `act*` の配列（1〜nAct）。`actS` ＝開始日、`actF` ＝**終了日の翌日**（矢線の終点）。日付はシリアル値（Long）
@@ -114,6 +118,12 @@ DrawSheet
   - 網掛け：土＝薄い青、日＝薄い赤（日単位も週単位も）、休工日＝斜線（段の行だけ）。曜日の文字は土＝青、日＝赤。
     臨時の工事日＝例外の日の表で ○ にした日（`IsExtraWorkDay`。曜日の決まりが ○ の日でも）＝薄い緑 RGB(198, 239, 206)
 
+- **ロードマップ（v12。社内の稟議用、A4横1枚）**：「ロードマップ」シート。行は目的 × まとめ（まとめが空欄なら工事）、
+  目的の中は始まりの早い順。帯は作業のある期間（14日までのすき間はつなぐ）、色は目的ごと。日数0の作業は◆と、その上に
+  名前と日付（その行は高さ 30pt）。目盛りは年度と月（`rmFyM`＝「設定」の「年度の始まり」、空欄なら4月）、上に期の帯。
+  工程データの「金額」があれば年度ごとの金額と合計（年度ごとの工事する日の数で分ける。工事する日がない作業は始まりの年度）。
+  単位は「設定」の「金額の単位」。金額が入るので、シートに `ROADMAP_MARK` の名前を付け、`ExportSchedulePdf` では除く
+
 ## Python のプレビュー（tools/preview）
 
 VBA を Excel で動かせないので、計算と配置を Python でなぞって確かめてきた。ファイルの番号は版の名残で、
@@ -124,11 +134,13 @@ VBA を Excel で動かせないので、計算と配置を Python でなぞっ�
   サンプルの日程は `tools/sample_calendar.json`（`network_logic3.set_calendar`）の休工日を飛ばして組む
 - `python tools/preview/test_progress.py` … 進捗の計算を、VBA を写した関数と 3000 通り突き合わせる
 - `python tools/preview/big_sample.py` … 4期・156件の工程で、シートごとの項目・結合点・図形のおおよその数
+- `python tools/preview/roadmap.py 出力先` … ロードマップ（サンプル）。`--big` で 4期・156件（金額は乱数）の例
+  ＝`images/完成イメージ_ロードマップ.png`
 - 必要なもの：Python 3.9 以上、matplotlib、openpyxl、日本語フォント（Noto Sans CJK JP、なければ 游ゴシック／メイリオ）
 
 ## 残っていること・次の候補
 
-- v9～v11 は Excel ではまだ試していない（v9 は構文エラーを直した直後）。かかった時間の表示を見て、重いシートに絞って直す
+- v9～v12 は Excel ではまだ試していない（v9 は構文エラーを直した直後）。かかった時間の表示を見て、重いシートに絞って直す
 - 候補：開いているシートだけ作り直す（他のシートの○の扱いに注意）、何年にもわたる全体工程の月単位の目盛り、
   図形を減らす（クリック用の透明な枠など）
 - 既知の見た目の問題：段に1つだけの作業の文字が矢線より長いと、端の○から下りる縦の帯と重なることがある
