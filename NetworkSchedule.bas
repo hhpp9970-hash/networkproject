@@ -62,8 +62,8 @@ Attribute VB_Name = "NetworkSchedule"
 '
 '  工事カレンダー（「工事カレンダー」シート。無ければ前の版の「休工日」シートを読みます）
 '    ・曜日ごとの決まり：「曜日」の表に、月～日それぞれ ○（工事する）か ×（工事しない）を書きます
-'    ・例外の日：「開始日」「終了日」「工事」「内容」の表に、連休・臨時の休み（×）や、休みの曜日・連休の中で
-'      工事する日（○）を書きます。終了日が空欄なら1日だけ。「工事」が空欄なら休み。1日だけの指定や短い期間は、
+'    ・例外の日：「開始日」「終了日」「工事」「内容」の表に、連休・臨時の休み（×）や、休みの曜日・連休・祝日などに
+'      工事する日（○。臨時の工事日）を書きます。終了日が空欄なら1日だけ。「工事」が空欄なら休み。1日だけの指定や短い期間は、
 '      長い期間より優先します（同じ長さなら下の行が優先）
 '    ・工事しない日（休工日）は、開始・終了が空欄の作業を自動で置くときと、日数（工事する日の数）・余裕日数を
 '      数えるときに飛ばします
@@ -77,8 +77,8 @@ Attribute VB_Name = "NetworkSchedule"
 '    ・矢線と文字は会社ごとの色です。「設定」の「会社の色」の表で、会社名の右のセル（B列）の
 '      塗りつぶし色を使います。表にない会社には自動で色を付けます
 '    ・クリティカルパスは、矢線の下の赤い帯・太線・太字・赤い○で示します
-'    ・土曜は薄い青、日曜は薄い赤で網掛けし、休工日（工事しない日）には斜線を引きます。休みの日（休みの曜日や
-'      連休など）だけど工事する日（工事カレンダーの例外の日で ○ にした日）は薄い緑で網掛けします
+'    ・土曜は薄い青、日曜は薄い赤で網掛けし、休工日（工事しない日）には斜線を引きます。臨時の工事日
+'      （工事カレンダーの例外の日で ○ にした日）は薄い緑で網掛けします
 '
 '  前提・簡略化しているところ
 '    ・日数・余裕日数は、工事する日の数で数えます（休工日は数えません）
@@ -179,7 +179,6 @@ Private gCoLabel() As String, gCoName() As String, gProg() As Double
 Private coDict As Object, nCo As Long, coOrder() As String
 Private holDict As Object       ' 例外の日 → True（休み）／False（工事する）
 Private wdOff(1 To 7) As Boolean    ' 工事しない曜日（Weekday の 1＝日 … 7＝土）
-Private extraDict As Object     ' 休みの日（休みの曜日・休みの期間）を、例外の日で工事する日にした日 → True
 
 ' ---- 1枚のシートに描くもの（シートごとに作り直す） ----
 Private nItem As Long
@@ -222,7 +221,7 @@ Private calcBaseDay As Long, movedApplied As Long, pushedCount As Long
 Private Const PROG_COLOR As Long = 8257766          ' イナズマ線の色 RGB(230, 0, 126)
 Private Const SAT_FILL As Long = 16247773           ' 土曜の網掛け RGB(221, 235, 247)
 Private Const SUN_FILL As Long = 15525116           ' 日曜の網掛け RGB(252, 228, 236)
-Private Const EXTRA_FILL As Long = 13561798         ' 休みの日だけど工事する日の網掛け RGB(198, 239, 206)
+Private Const EXTRA_FILL As Long = 13561798         ' 臨時の工事日（例外の日で ○）の網掛け RGB(198, 239, 206)
 Private Const HOL_HATCH As Long = 10921638          ' 休工日の斜線の色 RGB(166, 166, 166)
 Private actAS() As Variant, actAE() As Variant      ' 実績開始・実績終了（入力のまま）
 Private useProg As Boolean, showProg As Boolean, progT As Long, progTb As Long
@@ -556,10 +555,8 @@ Private Sub LoadHolidays()
     Dim ws As Worksheet, r As Long, k As Long, wr As Long, wc As Long, lastRow As Long, hdr As Long
     Dim cS As Long, cE As Long, cW As Long, d As Long, d1 As Long, d2 As Long, noWork As Boolean, v As Variant
     Dim ex1() As Long, ex2() As Long, exOff() As Boolean, exOrd() As Long, nEx As Long, j As Long, m As Long
-    Dim key As String, wasOff As Boolean
 
     Set holDict = CreateObject("Scripting.Dictionary")
-    Set extraDict = CreateObject("Scripting.Dictionary")
     For k = 1 To 7
         wdOff(k) = False
     Next k
@@ -644,19 +641,11 @@ Private Sub LoadHolidays()
         End If
     Next r
 
-    ' 長い期間から当てはめる（あとの行が上書きする）。休みだった日を工事する日にしたら覚えておく
+    ' 長い期間から当てはめる（あとの行が上書きする）
     For j = 1 To nEx
         k = exOrd(j)
         For d = ex1(k) To ex2(k)
-            key = CStr(d)
-            If exOff(k) Then
-                holDict(key) = True
-                If extraDict.Exists(key) Then extraDict.Remove key
-            Else
-                If holDict.Exists(key) Then wasOff = holDict(key) Else wasOff = wdOff(Weekday(CDate(d), vbSunday))
-                If wasOff Then extraDict(key) = True
-                holDict(key) = False
-            End If
+            holDict(CStr(d)) = exOff(k)
         Next d
     Next j
 End Sub
@@ -2020,7 +2009,7 @@ Private Sub DrawGrid()
             End With
         End If
         clr = 0                                         ' 土曜は薄い青、日曜は薄い赤（日単位も週単位も）
-        If IsExtraWorkDay(d) Then                       ' 休みの日（曜日・連休など）だけど工事する日は薄い緑
+        If IsExtraWorkDay(d) Then                       ' 臨時の工事日（例外の日で ○）は薄い緑
             clr = EXTRA_FILL
             hasExtra = True
         ElseIf wd = vbSaturday Then
@@ -2077,7 +2066,7 @@ Private Sub DrawGrid()
     If Len(CellText(sv)) > 0 Then txt = "第" & CellText(sv) & "版　"
     txt = txt & "作成日：" & Format(created, "yyyy/mm/dd") & "　目盛り：" & IIf(weekScale, "週", "日") & "単位（"
     If weekScale Then txt = txt & "月曜始まり。点線は日の区切り。"
-    txt = txt & "網掛け：青＝土、赤＝日" & IIf(hasExtra, "、緑＝休みの日に工事する日", "") & _
+    txt = txt & "網掛け：青＝土、赤＝日" & IIf(hasExtra, "、緑＝臨時の工事日", "") & _
           IIf(hasHol, "、斜線＝休工日", "") & "）"
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
@@ -3397,10 +3386,12 @@ Private Function IsHoliday(ByVal d As Long) As Boolean
     End If
 End Function
 
-' 休みの日（休みの曜日や、例外の日で休みにした期間）を、例外の日で工事する日（○）にした日か
+' 臨時の工事日か：工事カレンダーの例外の日で、工事する日（○）にした日（休みの曜日・連休・祝日などに工事する日）
 Private Function IsExtraWorkDay(ByVal d As Long) As Boolean
-    If extraDict Is Nothing Then Exit Function
-    IsExtraWorkDay = extraDict.Exists(CStr(d))
+    Dim key As String
+    If holDict Is Nothing Then Exit Function
+    key = CStr(d)
+    If holDict.Exists(key) Then IsExtraWorkDay = Not holDict(key)
 End Function
 
 ' d が休工日なら、休工日でない日まで進める（休みが長すぎるときは途中でやめる）
