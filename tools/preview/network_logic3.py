@@ -40,6 +40,7 @@ NEUTRAL, GHOST_C, RED, GRAY, BAND, HOL_FILL = "#404040", "#767676", "#C00000", "
 HOL = set()     # 例外の日：工事しない（休工日）
 WORK = set()    # 例外の日：工事する（休みの曜日でも）
 WD_OFF = set()  # 工事しない曜日（weekday：月=0 … 日=6）
+EXTRA = set()   # 休みの日（休みの曜日・休みの期間）を、例外の日で工事する日にした日（工程表で緑）
 WEEK_JA = "月火水木金土日"
 
 
@@ -53,8 +54,8 @@ def is_hol(d):
 
 
 def is_extra_work(d):
-    """VBA の IsExtraWorkDay と同じ：休みの曜日だけど、例外の日で工事する日（○）にした日"""
-    return (d - 1) % 7 in WD_OFF and d in WORK
+    """VBA の IsExtraWorkDay と同じ：休みの日（休みの曜日・休みの期間）を、例外の日で工事する日（○）にした日"""
+    return d in EXTRA
 
 
 def is_work_mark(t, dflt):
@@ -70,23 +71,34 @@ def is_work_mark(t, dflt):
 
 
 def set_calendar(cal):
-    """工事カレンダー（tools/sample_calendar.json の形）を読み込む。VBA の LoadHolidays と同じく下の行ほど優先"""
+    """工事カレンダー（tools/sample_calendar.json の形）を読み込む。VBA の LoadHolidays と同じく、期間の長い行から
+    当てはめる（1日だけの指定や短い期間が優先。同じ長さなら後の行が優先）"""
     HOL.clear()
     WORK.clear()
     WD_OFF.clear()
+    EXTRA.clear()
     for ch, mark in cal.get("weekdays", {}).items():
         if ch[:1] in WEEK_JA and not is_work_mark(mark, True):
             WD_OFF.add(WEEK_JA.index(ch[:1]))
     if len(WD_OFF) == 7:  # すべて休みなら曜日の決まりは使わない
         WD_OFF.clear()
+    rows = []
     for e in cal.get("days", []):
         d1 = dt.date.fromisoformat(e["start"]).toordinal()
         d2 = dt.date.fromisoformat(e["end"]).toordinal() if e.get("end") else d1
         d1, d2 = min(d1, d2), max(d1, d2)
-        off = not is_work_mark(e.get("work", ""), False)
+        rows.append((d1, d2, not is_work_mark(e.get("work", ""), False)))
+    for d1, d2, off in sorted(rows, key=lambda r: -(r[1] - r[0])):  # 長い期間から（sorted は同じ長さの順を保つ）
         for d in range(d1, d2 + 1):
-            (HOL if off else WORK).add(d)
-            (WORK if off else HOL).discard(d)
+            if off:
+                HOL.add(d)
+                WORK.discard(d)
+                EXTRA.discard(d)
+            else:
+                if is_hol(d):  # 休みだった日を工事する日にした
+                    EXTRA.add(d)
+                WORK.add(d)
+                HOL.discard(d)
 
 
 def load_sample_calendar():
