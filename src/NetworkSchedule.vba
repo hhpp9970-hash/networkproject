@@ -43,7 +43,8 @@ Attribute VB_Name = "NetworkSchedule"
 '  大きな工程表（重さ）
 '    ・作図中はステータスバー（画面のいちばん下）に進み具合を出します。Esc キーで中止できます
 '    ・目盛りの「自動」（空欄も同じ）は、期間が半年までのシートは日単位、それより長いシートは週単位にします。
-'      「日」にしていても、期間が2年を超えるシートは週単位で描きます（列が多すぎて重くなるため）
+'      全体工程は「日」にしていても、期間が2年を超えると週単位で描きます（列が多すぎて重くなるため）。
+'      期ごとのシートと「詳細工程」は、「日」にすれば長くても日単位で描きます
 '    ・作図が終わったら、シートごとにかかった時間と図形の数を表示します
 '
 '  縦軸
@@ -60,6 +61,7 @@ Attribute VB_Name = "NetworkSchedule"
 '    ・マイルストーン（日数0）は、○の横（矢線の高さ）に「作業ID 名前（会社）」と1行で書きます
 '
 '  目盛り
+'    ・週単位の列は月曜始まりです。日付の行に月曜の日付、曜日の行に「月」を書きます
 '    ・日（週単位のときは週）の境目に薄い縦線を引きます。結合点（○）はこの線の上に乗ります
 '      （線の右の日に始まり、左の日に終わる点）
 '
@@ -465,7 +467,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
         Exit Function
     End If
 
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     nAct = 0
     For r = hdr + 1 To lastRow
         If Len(CellText(ws.Cells(r, cId).Value)) > 0 Then nAct = nAct + 1
@@ -949,7 +951,7 @@ Private Sub WriteResults(ByVal ws As Worksheet)
 
     heads = Array("計算開始", "計算終了", "全余裕(日)", "クリティカル", "チェック", "先行作業の名前")
     hdr = FindHeaderRow(ws, "作業ID")
-    lastRow = ws.Cells(ws.Rows.Count, FindCol(ws, hdr, "作業ID")).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, FindCol(ws, hdr, "作業ID"))
     For k = 1 To 6
         cols(k) = EnsureCol(ws, hdr, CStr(heads(k - 1)))
         If lastRow > hdr Then ws.Range(ws.Cells(hdr + 1, cols(k)), ws.Cells(lastRow, cols(k))).ClearContents
@@ -1095,7 +1097,8 @@ Private Sub SetViewRange()
     viewEnd = maxF + 2
 
     ' 目盛り：「週」「日」「自動」（空欄も自動）。自動は期間が AUTO_DAY_SPAN 日までなら日単位。
-    ' 「日」でも期間が MAX_DAY_SPAN 日を超えるときは、列が多すぎて重くなるので週単位にする
+    ' 全体工程は「日」でも期間が MAX_DAY_SPAN 日を超えるときは、列が多すぎて重くなるので週単位にする
+    ' （期のシート・詳細工程は「日」なら、長くても日単位のまま）
     If isOverall Then sv = GetSettingValue("全体の目盛り") Else sv = GetSettingValue("期ごとの目盛り")
     If Len(CellText(sv)) = 0 Then sv = GetSettingValue("目盛り")
     sc = CellText(sv)
@@ -1103,7 +1106,7 @@ Private Sub SetViewRange()
         daysPerCol = 7
     ElseIf InStr(sc, "日") > 0 Then
         daysPerCol = 1
-        If viewEnd - viewStart > MAX_DAY_SPAN Then
+        If isOverall And viewEnd - viewStart > MAX_DAY_SPAN Then
             daysPerCol = 7
             If Len(autoWeekNote) > 0 Then autoWeekNote = autoWeekNote & "・"
             autoWeekNote = autoWeekNote & "「" & curSheetName & "」"
@@ -1861,6 +1864,7 @@ Private Sub DrawGrid()
             If wd = vbSunday Then wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
         Else
             vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")
+            vWk(1, c + 1) = Mid$("日月火水木金土", Weekday(CDate(d), vbSunday), 1)   ' 週の初めの日（月曜）の曜日
         End If
         If clr <> runClr Then
             If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, col - 1)).Interior.Color = runClr
@@ -1871,7 +1875,7 @@ Private Sub DrawGrid()
     If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, lastCol)).Interior.Color = runClr
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Value = vMon
     wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowDay, lastCol)).Value = vDay
-    If daysPerCol = 1 Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
+    wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
     If showProg Then
         If progT >= viewStart And progT < viewStart + nCols * daysPerCol Then
             c = (progT - viewStart) \ daysPerCol
@@ -1905,6 +1909,8 @@ Private Sub DrawGrid()
         Else
             txt = txt & "（網掛けは土日）"
         End If
+    Else
+        txt = txt & "（月曜始まり）"
     End If
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
@@ -3367,6 +3373,17 @@ Private Function FindCol(ByVal ws As Worksheet, ByVal hdr As Long, ByVal key As 
     Next c
 End Function
 
+' 工程データの最後の行（作業IDの列で値のある、いちばん下の行）。End(xlUp) はフィルターで隠れた行を飛ばすので、
+' 表がテーブルならテーブルの最後の行、シートで絞り込み中なら使っている範囲の最後の行とくらべて、大きいほうにする
+Private Function DataLastRow(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId As Long) As Long
+    Dim r As Long, lo As ListObject
+    r = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    Set lo = ws.Cells(hdr, cId).ListObject
+    If Not lo Is Nothing Then r = MaxL(r, lo.Range.Row + lo.Range.Rows.Count - 1)
+    If ws.FilterMode Then r = MaxL(r, ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1)
+    DataLastRow = MaxL(r, hdr)
+End Function
+
 Private Function EnsureCol(ByVal ws As Worksheet, ByVal hdr As Long, ByVal key As String) As Long
     Dim c As Long
     c = FindCol(ws, hdr, key)
@@ -3610,7 +3627,7 @@ End Function
 ' 工程データで作業IDの行を探す（見つからなければ 0）
 Private Function FindActRow(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId As Long, ByVal id As String) As Long
     Dim r As Long, lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     For r = hdr + 1 To lastRow
         If NormalizeId(CellText(ws.Cells(r, cId).Value)) = id Then
             FindActRow = r
@@ -3641,7 +3658,7 @@ Private Function IsUpstream(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId 
     Dim cur As String, v As Variant
 
     Set dict = CreateObject("Scripting.Dictionary")
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     For r = hdr + 1 To lastRow
         cur = NormalizeId(CellText(ws.Cells(r, cId).Value))
         If Len(cur) > 0 And Not dict.Exists(cur) Then dict.Add cur, CellText(ws.Cells(r, cPred).Value)

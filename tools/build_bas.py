@@ -23,7 +23,7 @@ TOOLS = ROOT / "tools"
 # check_vba2.py が「宣言のない名前」として出すが、Excel/VBA の組み込み（またはラベル）で問題ないもの。
 # 新しい定数などを使ったら、組み込みであることを確かめてからここに足す
 KNOWN = {
-    "DoEvents", "Timer", "Like", "Name", "FreeformBuilder", "Done", "Fail",
+    "DoEvents", "Timer", "Like", "Name", "FreeformBuilder", "ListObject", "Done", "Fail",
     "vbCr", "vbLf", "vbTab", "vbOKCancel", "vbYesNo",
     "msoAlignRight", "msoEditingAuto", "msoSegmentLine", "msoShapeRoundedRectangle",
     "xlCalculationManual", "xlDefault", "xlErrorHandler", "xlInsideVertical", "xlInterrupt", "xlThick", "xlWait",
