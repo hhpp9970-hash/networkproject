@@ -7,6 +7,8 @@ Attribute VB_Name = "NetworkSchedule"
 '                     名前を表示します。期があれば目盛りの上に期の帯を描きます
 '    ・期ごとのシート（「1期」「2期」…） … 「期」列で分けた作業を1つずつ
 '    ・「詳細工程」 … 「まとめ」を使っていて「期」が無いときだけ、すべての作業を1つずつ
+'    ・「ロードマップ」 … 稟議用のまとめ（A4横1枚）。まとめごとに作業のある期間を帯で、マイルストーンを◆で描き、
+'                         上に期の帯、右に年度ごとの金額（「金額」の列があるとき）を出します
 '
 '  実行するマクロ（Alt＋F8 から実行）
 '    DrawNetworkSchedule … 工程表を作図する
@@ -105,8 +107,10 @@ Private Const CALENDAR_SHEET As String = "工事カレンダー"   ' 曜日ご�
 Private Const HOLIDAY_SHEET As String = "休工日"            ' 前の版のシート（工事カレンダーが無いときに読む）
 Private Const OVERALL_SHEET As String = "全体工程"
 Private Const DETAIL_SHEET As String = "詳細工程"
+Private Const ROADMAP_SHEET As String = "ロードマップ"
 Private Const COMMON_ZONE As String = "共通"         ' 工区（目的）が空欄の作業をまとめる名前
 Private Const MARK_NAME As String = "NW_GENERATED"   ' マクロが作ったシートの目印（シート内の名前）
+Private Const ROADMAP_MARK As String = "NW_ROADMAP"   ' ロードマップの目印（取引先用の PDF に入れない）
 Private Const CLICK_TAG As String = "NWCLICK"        ' クリックでつなぐ図形の目印（代替テキストの先頭）
 Private Const PICK_MARK As String = "NW_PICK"        ' 選んだ前の作業の目印の図形名
 Private Const TMP_PREFIX As String = "NW_TMP_"       ' 未反映のつなぎの目印の図形名の先頭
@@ -224,6 +228,7 @@ Private Const SUN_FILL As Long = 15525116           ' 日曜の網掛け RGB(252
 Private Const EXTRA_FILL As Long = 13561798         ' 臨時の工事日（例外の日で ○）の網掛け RGB(198, 239, 206)
 Private Const HOL_HATCH As Long = 10921638          ' 休工日の斜線の色 RGB(166, 166, 166)
 Private actAS() As Variant, actAE() As Variant      ' 実績開始・実績終了（入力のまま）
+Private actAmt() As Double                          ' 金額（ロードマップの年度ごとの金額に使う）
 Private useProg As Boolean, showProg As Boolean, progT As Long, progTb As Long
 Private prgState() As Long, prgP() As Double, prgDelay() As Double, prgPlan() As Double, prgWd() As Long
 Private prgFS() As Long, prgFF() As Long, prgLastFc() As Long, progPlanEnd As Long, progFcEnd As Long
@@ -235,6 +240,12 @@ Private spdOn As Boolean, spdCalc As Long, spdEvents As Boolean, spdT0 As Single
 Private progMsg As String, curSheetName As String, sheetNo As Long, nSheetsTotal As Long
 Private timeNote As String, autoWeekNote As String
 Private drawOK As Boolean       ' 最後の作図が最後まで終わったか（PDF にする前の再作図で中止されたら PDF にしない）
+' ---- ロードマップ（v12）----
+Private rmN As Long, rmLbl() As String, rmPurp() As Long, rmS() As Long, rmE() As Long, rmSeq() As Long
+Private rmMile() As Boolean     ' マイルストーンのある行
+Private actRm() As Long         ' 作業 → ロードマップの行
+Private rmFyM As Long, rmY0 As Long, rmNFY As Long, rmX0 As Double, rmColW As Double
+Private rmAmt() As Double, rmTot() As Double, useAmt As Boolean
 
 
 '==============================================================================
@@ -242,7 +253,7 @@ Private drawOK As Boolean       ' 最後の作図が最後まで終わったか�
 '==============================================================================
 Public Sub DrawNetworkSchedule()
     Dim wsD As Worksheet, i As Long, p As Long, cnt As Long, txt As String, firstName As String
-    Dim keepSheet As String, keepRow As Long, keepCol As Long, movedIds As Collection
+    Dim keepSheet As String, keepRow As Long, keepCol As Long, movedIds As Collection, rmName As String
     Dim errNo As Long, eDesc As String
 
     drawOK = False
@@ -311,7 +322,7 @@ Public Sub DrawNetworkSchedule()
 
     timeNote = "計算 " & Format(Elapsed(), "0.0") & "秒"
     sheetNo = 0
-    nSheetsTotal = 1 + nPhase
+    nSheetsTotal = 2 + nPhase           ' 全体工程・期ごと・ロードマップ
     If nGroup > 0 And nPhase = 0 Then nSheetsTotal = nSheetsTotal + 1
     Progress "前に作ったシートを削除中", True
     DeleteGeneratedSheets
@@ -320,6 +331,7 @@ Public Sub DrawNetworkSchedule()
     For p = 1 To nPhase
         Call DrawSheet(p)
     Next p
+    rmName = DrawRoadmap()
     ThisWorkbook.Worksheets(firstName).Activate
     If Len(keepSheet) > 0 Then
         If SheetExists(keepSheet) Then
@@ -339,7 +351,7 @@ Public Sub DrawNetworkSchedule()
     txt = "工程表を作成しました（「" & firstName & "」"
     If nGroup > 0 And nPhase = 0 Then txt = txt & "と「" & DETAIL_SHEET & "」"
     If nPhase > 0 Then txt = txt & "と期ごとの " & nPhase & " シート"
-    txt = txt & "）。"
+    txt = txt & "、「" & rmName & "」）。"
     If movedApplied > 0 Then txt = txt & vbCrLf & "動かした○を " & movedApplied & " 件の作業の日付に反映しました。"
     If pushedCount > 0 Then txt = txt & vbCrLf & "後に続く " & pushedCount & " 件の作業を後ろへずらしました。"
     If useProg Then txt = txt & ProgressMsg()
@@ -384,8 +396,8 @@ Public Sub ExportSchedulePdf()
         If Not drawOK Then Exit Sub
     End If
 
-    For Each ws In ThisWorkbook.Worksheets
-        If IsGeneratedSheet(ws) Then
+    For Each ws In ThisWorkbook.Worksheets   ' ロードマップ（社内の稟議用。金額がある）は入れない
+        If IsGeneratedSheet(ws) And Not HasSheetMark(ws, ROADMAP_MARK) Then
             n = n + 1
             ReDim Preserve sel(1 To n)
             sel(n) = ws.Name
@@ -456,7 +468,7 @@ End Sub
 Private Function LoadData(ByVal ws As Worksheet) As Boolean
     Dim hdr As Long, r As Long, k As Long, lastRow As Long, v As Variant
     Dim cKouji As Long, cPhase As Long, cGroup As Long, cZone As Long, cId As Long, cName As Long, cCo As Long
-    Dim cDisp As Long, cPurp As Long
+    Dim cDisp As Long, cPurp As Long, cAmt As Long
     Dim cDur As Long, cPred As Long, cStart As Long, cEnd As Long, cProg As Long, cAS As Long, cAE As Long
 
     hdr = FindHeaderRow(ws, "作業ID")
@@ -480,6 +492,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     cProg = FindCol(ws, hdr, "進捗")
     cAS = FindCol(ws, hdr, "実績開始")
     cAE = FindCol(ws, hdr, "実績終了")
+    cAmt = FindCol(ws, hdr, "金額")
     If cKouji = 0 Or cName = 0 Or cDur = 0 Or cPred = 0 Or cStart = 0 Or cEnd = 0 Then
         MsgBox "見出しに「工事」「作業ID」「作業名」「日数」「先行作業」「開始」「終了」が必要です。", vbExclamation
         Exit Function
@@ -502,7 +515,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     ReDim actStartIn(1 To nAct): ReDim actEndIn(1 To nAct): ReDim actProg(1 To nAct): ReDim actRow(1 To nAct)
     ReDim actS(1 To nAct): ReDim actF(1 To nAct): ReDim actTF(1 To nAct): ReDim actCrit(1 To nAct)
     ReDim actMsg(1 To nAct)
-    ReDim actAS(1 To nAct): ReDim actAE(1 To nAct)
+    ReDim actAS(1 To nAct): ReDim actAE(1 To nAct): ReDim actAmt(1 To nAct)
 
     k = 0
     For r = hdr + 1 To lastRow
@@ -540,6 +553,10 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
             End If
             If cAS > 0 Then actAS(k) = ws.Cells(r, cAS).Value
             If cAE > 0 Then actAE(k) = ws.Cells(r, cAE).Value
+            If cAmt > 0 Then
+                v = ws.Cells(r, cAmt).Value
+                If IsNum(v) Then actAmt(k) = CDbl(v)
+            End If
         End If
     Next r
     LoadData = True
@@ -3456,6 +3473,17 @@ Private Sub DeleteGeneratedSheets()
     Application.DisplayAlerts = True
 End Sub
 
+' シートに目印の名前（MARK_NAME など）があるか
+Private Function HasSheetMark(ByVal ws As Worksheet, ByVal mark As String) As Boolean
+    Dim nm As Name
+    For Each nm In ws.Names
+        If nm.Name Like "*!" & mark Then
+            HasSheetMark = True
+            Exit Function
+        End If
+    Next nm
+End Function
+
 Private Function IsGeneratedSheet(ByVal ws As Worksheet) As Boolean
     Dim nm As Name, shp As Shape
     For Each nm In ws.Names
@@ -4262,6 +4290,525 @@ End Function
 
 
 '==============================================================================
+'  稟議用のロードマップ（A4横1枚）  v12
+'    ・まとめごと（まとめが空欄の作業は工事ごと）に1行。目的があれば目的ごとに分け、目的の中は始まりの早い順
+'    ・作業のある期間を帯で描く（14日までのすき間はつなぐ）。日数0の作業（マイルストーン）は◆と、その上に名前と日付
+'      （マイルストーンのある行は少し高くする。目盛りの右端からはみ出す名前は左へずらす）
+'    ・上に期の帯。目盛りは年度（「設定」の「年度の始まり」の月から。空欄なら4月）と月
+'    ・「金額」の列があれば、右に年度ごとの金額と合計、いちばん下に年度ごとの合計。年度をまたぐ作業の金額は、
+'      年度ごとの工事する日の数で分ける（工事する日がない作業は、始まりの年度）
+'==============================================================================
+Private Function DrawRoadmap() As String
+    Dim nm As String, i As Long, k As Long, q As Long, r As Long, c As Long, f As Long, rw As Long, t0 As Single
+    Dim sv As Variant, txt As String, unitTxt As String, minS As Long, maxE As Long, yE As Long, nMon As Long
+    Dim cP As Long, cI As Long, cT As Long, c0 As Long, cM As Long, lastCol As Long, nLv As Long
+    Dim rH1 As Long, rH2 As Long, rFirst As Long, rLastItem As Long, rTot As Long, rNote As Long, rB As Long
+    Dim vL() As Variant, vMon() As Variant, vAmt() As Variant, sumRow As Double
+
+    nm = UniqueSheetName(ROADMAP_SHEET)
+    curSheetName = nm
+    sheetNo = sheetNo + 1
+    progMsg = "「" & nm & "」（" & sheetNo & "/" & nSheetsTotal & "）"
+    t0 = Elapsed()
+    Progress "ロードマップを作成中", True
+    RoadRows
+
+    ' 目盛り：最初の作業の年度の初めから、最後の作業の年度の終わりまで（月の列）
+    sv = GetSettingValue("年度の始まり")
+    rmFyM = 4
+    If IsNum(sv) Then
+        If CLng(sv) >= 1 And CLng(sv) <= 12 Then rmFyM = CLng(sv)
+    End If
+    minS = actS(1)
+    maxE = LastDay(1)
+    For i = 2 To nAct
+        If actS(i) < minS Then minS = actS(i)
+        If LastDay(i) > maxE Then maxE = LastDay(i)
+    Next i
+    rmY0 = FiscalYear(minS)
+    yE = FiscalYear(maxE)
+    rmNFY = yE - rmY0 + 1
+    nMon = rmNFY * 12
+    useAmt = False
+    For i = 1 To nAct
+        If actAmt(i) <> 0 Then useAmt = True
+    Next i
+    If useAmt Then RoadAmounts
+    unitTxt = CellText(GetSettingValue("金額の単位"))
+
+    ' シート
+    Set wsC = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+    wsC.Name = nm
+    wsC.Names.Add Name:=MARK_NAME, RefersTo:="=TRUE", Visible:=False
+    wsC.Names.Add Name:=ROADMAP_MARK, RefersTo:="=TRUE", Visible:=False
+    shapeSeq = 0
+    With wsC.Cells
+        .Font.Name = "游ゴシック"
+        .Font.Size = 9
+        .VerticalAlignment = xlCenter
+    End With
+
+    ' 列：目的（あれば）・項目・期間・月の列・金額（年度ごと・合計）
+    c = 1
+    If usePurps Then
+        cP = c
+        c = c + 1
+    End If
+    cI = c
+    cT = c + 1
+    c0 = c + 2
+    lastCol = c0 + nMon - 1
+    If useAmt Then
+        cM = lastCol + 1
+        lastCol = cM + rmNFY
+    End If
+    If cP > 0 Then wsC.Columns(cP).ColumnWidth = 12
+    wsC.Columns(cI).ColumnWidth = 20
+    wsC.Columns(cT).ColumnWidth = 18
+    wsC.Range(wsC.Columns(c0), wsC.Columns(c0 + nMon - 1)).ColumnWidth = MaxD(1.6, 72 / nMon)
+    If useAmt Then wsC.Range(wsC.Columns(cM), wsC.Columns(lastCol)).ColumnWidth = 11
+
+    ' 行：表題・説明・すき間・期の帯・年度・月・項目…・合計・凡例
+    nLv = 0
+    If nPhase > 0 Then nLv = PhaseLevels()
+    rH1 = 4 + nLv
+    rH2 = rH1 + 1
+    rFirst = rH2 + 1
+    rLastItem = rFirst + rmN - 1
+    rTot = 0
+    If useAmt Then rTot = rLastItem + 1
+    rNote = MaxL(rLastItem, rTot) + 2
+    wsC.Rows(1).RowHeight = 24
+    wsC.Rows(2).RowHeight = 16
+    wsC.Rows(3).RowHeight = 8
+    If nLv > 0 Then wsC.Range(wsC.Rows(4), wsC.Rows(3 + nLv)).RowHeight = PHASE_ROW_HEIGHT
+    wsC.Range(wsC.Rows(rH1), wsC.Rows(rH2)).RowHeight = 16
+    For q = 1 To rmN        ' マイルストーンのある行は、◆の上に名前を書くので高くする
+        If rmMile(rmSeq(q)) Then wsC.Rows(rFirst + q - 1).RowHeight = 30 Else wsC.Rows(rFirst + q - 1).RowHeight = 22
+    Next q
+    If rTot > 0 Then wsC.Rows(rTot).RowHeight = 22
+
+    ' 表題と説明
+    txt = CellText(GetSettingValue("工事名"))
+    If Len(txt) = 0 Then txt = "工事"
+    With wsC.Cells(1, 1)
+        .Value = txt & "　ロードマップ"
+        .Font.Size = 14
+        .Font.Bold = True
+    End With
+    sv = GetSettingValue("作成日")
+    If Not IsDate(sv) Then sv = Date
+    txt = ""
+    If Len(CellText(GetSettingValue("版数"))) > 0 Then txt = "第" & CellText(GetSettingValue("版数")) & "版　"
+    txt = txt & "作成日：" & Format(sv, "yyyy/mm/dd") & "　工期：" & RoadSpan(minS, maxE)
+    wsC.Cells(2, 1).Value = txt
+
+    ' 見出し：目的・項目・期間（2行を結合）、年度（12か月を結合）と月、金額
+    If cP > 0 Then HeadCell rH1, cP, rH2, cP, "目的"
+    HeadCell rH1, cI, rH2, cI, "項目"
+    HeadCell rH1, cT, rH2, cT, "期間"
+    ReDim vMon(1 To 1, 1 To nMon)
+    For f = 1 To rmNFY
+        If rmFyM = 1 Then txt = (rmY0 + f - 1) & "年" Else txt = (rmY0 + f - 1) & "年度"
+        HeadCell rH1, c0 + (f - 1) * 12, rH1, c0 + f * 12 - 1, txt
+        For k = 1 To 12
+            vMon(1, (f - 1) * 12 + k) = ((rmFyM - 1 + k - 1) Mod 12) + 1
+        Next k
+    Next f
+    With wsC.Range(wsC.Cells(rH2, c0), wsC.Cells(rH2, c0 + nMon - 1))
+        .Value = vMon
+        .HorizontalAlignment = xlCenter
+        .Font.Size = 8
+        .Interior.Color = RGB(242, 242, 242)
+    End With
+    If useAmt Then
+        If Len(unitTxt) > 0 Then txt = "金額（" & unitTxt & "）" Else txt = "金額"
+        HeadCell rH1, cM, rH1, lastCol, txt
+        For f = 1 To rmNFY
+            If rmFyM = 1 Then txt = (rmY0 + f - 1) & "年" Else txt = (rmY0 + f - 1) & "年度"
+            HeadCell rH2, cM + f - 1, rH2, cM + f - 1, txt
+        Next f
+        HeadCell rH2, lastCol, rH2, lastCol, "合計"
+    End If
+
+    ' 項目の行（目的・項目・期間・金額は配列でまとめて書く）
+    ReDim vL(1 To rmN, 1 To 2)
+    If useAmt Then ReDim vAmt(1 To rmN + 1, 1 To rmNFY + 1)
+    For q = 1 To rmN
+        rw = rmSeq(q)
+        vL(q, 1) = "'" & rmLbl(rw)
+        vL(q, 2) = "'" & RoadSpan(rmS(rw), rmE(rw))       ' 1日だけの「2027/2/23」が日付にならないように
+        If useAmt Then
+            sumRow = 0
+            For f = 1 To rmNFY
+                If rmAmt(rw, f) <> 0 Then vAmt(q, f) = rmAmt(rw, f)
+                sumRow = sumRow + rmAmt(rw, f)
+            Next f
+            If sumRow <> 0 Then vAmt(q, rmNFY + 1) = sumRow
+        End If
+    Next q
+    wsC.Range(wsC.Cells(rFirst, cI), wsC.Cells(rLastItem, cT)).Value = vL
+    With wsC.Range(wsC.Cells(rFirst, cI), wsC.Cells(rLastItem, cI))
+        .IndentLevel = 1
+        .WrapText = True
+    End With
+    wsC.Range(wsC.Cells(rFirst, cT), wsC.Cells(rLastItem, cT)).HorizontalAlignment = xlCenter
+    If useAmt Then
+        For f = 1 To rmNFY + 1
+            vAmt(rmN + 1, f) = rmTot(f)
+        Next f
+        With wsC.Range(wsC.Cells(rFirst, cM), wsC.Cells(rTot, lastCol))
+            .Value = vAmt
+            .NumberFormat = "#,##0"
+        End With
+        wsC.Range(wsC.Cells(rFirst, lastCol), wsC.Cells(rTot, lastCol)).Font.Bold = True
+        With wsC.Range(wsC.Cells(rTot, 1), wsC.Cells(rTot, cT))
+            .Merge
+            .Value = "合計"
+            .HorizontalAlignment = xlCenter
+            .Font.Bold = True
+        End With
+        With wsC.Range(wsC.Cells(rTot, 1), wsC.Cells(rTot, lastCol))
+            .Interior.Color = RGB(242, 242, 242)
+            .Font.Bold = True
+            .Borders(xlEdgeTop).LineStyle = xlDouble
+        End With
+    End If
+
+    ' 目的（続く行を結合して塗る）
+    If cP > 0 Then
+        k = 1
+        For q = 1 To rmN
+            If q = rmN Then
+                RoadPurpCell rFirst + k - 1, rFirst + q - 1, cP, purpName(rmPurp(rmSeq(q)))
+            ElseIf rmPurp(rmSeq(q + 1)) <> rmPurp(rmSeq(q)) Then
+                RoadPurpCell rFirst + k - 1, rFirst + q - 1, cP, purpName(rmPurp(rmSeq(q)))
+                k = q + 1
+            End If
+        Next q
+    End If
+
+    ' 罫線：月は薄い線、年度の境目は濃い線、行の境目は薄い線、外枠
+    r = MaxL(rLastItem, rTot)
+    With wsC.Range(wsC.Cells(rH2, c0), wsC.Cells(rLastItem, c0 + nMon - 1)).Borders(xlInsideVertical)
+        .LineStyle = xlContinuous
+        .Color = RGB(217, 217, 217)
+    End With
+    For f = 1 To rmNFY
+        With wsC.Range(wsC.Cells(rH1, c0 + (f - 1) * 12), wsC.Cells(r, c0 + (f - 1) * 12)).Borders(xlEdgeLeft)
+            .LineStyle = xlContinuous
+            .Color = RGB(118, 118, 118)
+        End With
+    Next f
+    With wsC.Range(wsC.Cells(rH1, 1), wsC.Cells(r, lastCol))
+        With .Borders(xlInsideHorizontal)
+            .LineStyle = xlContinuous
+            .Color = RGB(217, 217, 217)
+        End With
+        With .Borders(xlEdgeLeft)
+            .LineStyle = xlContinuous
+            .Color = RGB(89, 89, 89)
+        End With
+        With .Borders(xlEdgeRight)
+            .LineStyle = xlContinuous
+            .Color = RGB(89, 89, 89)
+        End With
+        With .Borders(xlEdgeTop)
+            .LineStyle = xlContinuous
+            .Color = RGB(89, 89, 89)
+        End With
+        With .Borders(xlEdgeBottom)
+            .LineStyle = xlContinuous
+            .Color = RGB(89, 89, 89)
+        End With
+    End With
+    With wsC.Range(wsC.Cells(rH2, 1), wsC.Cells(rH2, lastCol)).Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .Color = RGB(89, 89, 89)
+    End With
+    For c = 2 To c0     ' 左の欄の区切り（目的・項目・期間・月の始まり。合計の行は結合しているので月の始まりだけ）
+        If c = c0 Then rB = r Else rB = rLastItem
+        With wsC.Range(wsC.Cells(rH1, c), wsC.Cells(rB, c)).Borders(xlEdgeLeft)
+            .LineStyle = xlContinuous
+            .Color = RGB(118, 118, 118)
+        End With
+    Next c
+    If useAmt Then
+        With wsC.Range(wsC.Cells(rH1, cM), wsC.Cells(r, cM)).Borders(xlEdgeLeft)
+            .LineStyle = xlContinuous
+            .Weight = xlMedium
+            .Color = RGB(89, 89, 89)
+        End With
+    End If
+
+    ' 図形：期の帯・作業のある期間の帯・マイルストーン
+    rmX0 = wsC.Cells(rH2, c0).Left
+    rmColW = wsC.Cells(rH2, c0).Width
+    If nLv > 0 Then
+        wsC.Cells(4, 1).Value = "期"
+        wsC.Cells(4, 1).IndentLevel = 1
+        RoadPhaseBars
+    End If
+    For q = 1 To rmN
+        Progress "ロードマップ " & q & "/" & rmN
+        If rmMile(rmSeq(q)) Then        ' マイルストーンのある行は、帯を少し下にして上に名前の場所を空ける
+            RoadBars rmSeq(q), wsC.Rows(rFirst + q - 1).Top + 19
+        Else
+            RoadBars rmSeq(q), wsC.Rows(rFirst + q - 1).Top + 11
+        End If
+    Next q
+    wsC.Cells(rNote, 1).Value = "帯＝作業のある期間（14日までのすき間はつなぐ）　◆＝マイルストーン（日数0の作業）" & _
+                               IIf(useAmt, "　金額は年度ごとの工事する日の数で分けています", "")
+    wsC.Cells(rNote, 1).Font.Color = RGB(89, 89, 89)
+
+    ' A4横1枚に印刷
+    wsC.Activate
+    ActiveWindow.DisplayGridlines = False
+    ActiveWindow.ScrollRow = 1
+    ActiveWindow.ScrollColumn = 1
+    On Error Resume Next    ' プリンターによっては用紙サイズを設定できないことがあるため
+    Application.PrintCommunication = False
+    With wsC.PageSetup
+        .PrintArea = wsC.Range(wsC.Cells(1, 1), wsC.Cells(rNote, lastCol)).Address
+        .Orientation = xlLandscape
+        .PaperSize = xlPaperA4
+        .Zoom = False
+        .FitToPagesWide = 1
+        .FitToPagesTall = 1
+        .CenterHorizontally = True
+        .LeftMargin = Application.CentimetersToPoints(1)
+        .RightMargin = Application.CentimetersToPoints(1)
+        .TopMargin = Application.CentimetersToPoints(1)
+        .BottomMargin = Application.CentimetersToPoints(1)
+    End With
+    Application.PrintCommunication = True
+    On Error GoTo 0
+    timeNote = timeNote & "、" & nm & " " & Format(Elapsed() - t0, "0.0") & "秒（図形 " & wsC.Shapes.Count & "）"
+    DrawRoadmap = nm
+End Function
+
+' ロードマップの行：目的とまとめ（まとめが空欄なら工事）の組ごと。並びは目的の順 → 始まりの早い順 → 出てきた順
+Private Sub RoadRows()
+    Dim dict As Object, i As Long, k As Long, m As Long, j As Long, key As String, s As Long, e As Long
+
+    Set dict = CreateObject("Scripting.Dictionary")
+    rmN = 0
+    ReDim rmLbl(1 To nAct): ReDim rmPurp(1 To nAct): ReDim rmS(1 To nAct): ReDim rmE(1 To nAct)
+    ReDim rmSeq(1 To nAct): ReDim actRm(1 To nAct): ReDim rmMile(1 To nAct)
+    For i = 1 To nAct
+        If Len(actGroup(i)) > 0 Then key = actPurpIdx(i) & "|G|" & actGroup(i) Else key = actPurpIdx(i) & "|K|" & actKouji(i)
+        s = actS(i)
+        e = LastDay(i)
+        If Not dict.Exists(key) Then
+            rmN = rmN + 1
+            dict.Add key, rmN
+            If Len(actGroup(i)) > 0 Then rmLbl(rmN) = actGroup(i) Else rmLbl(rmN) = actKouji(i)
+            rmPurp(rmN) = actPurpIdx(i)
+            rmS(rmN) = s
+            rmE(rmN) = e
+        End If
+        k = dict(key)
+        actRm(i) = k
+        If s < rmS(k) Then rmS(k) = s
+        If e > rmE(k) Then rmE(k) = e
+        If actF(i) <= actS(i) Then rmMile(k) = True
+    Next i
+    For k = 1 To rmN
+        m = k
+        Do While m > 1
+            j = rmSeq(m - 1)
+            If rmPurp(k) < rmPurp(j) Or (rmPurp(k) = rmPurp(j) And rmS(k) < rmS(j)) Then
+                rmSeq(m) = j
+                m = m - 1
+            Else
+                Exit Do
+            End If
+        Loop
+        rmSeq(m) = k
+    Next k
+End Sub
+
+' 年度ごとの金額：作業の金額を、年度ごとの工事する日の数で分ける（工事する日がない作業は始まりの年度）
+Private Sub RoadAmounts()
+    Dim i As Long, f As Long, w As Long, wf As Long, fs As Long, fe As Long
+    ReDim rmAmt(1 To rmN, 1 To rmNFY): ReDim rmTot(1 To rmNFY + 1)
+    For i = 1 To nAct
+        If actAmt(i) <> 0 Then
+            w = 0
+            If actF(i) > actS(i) Then w = WorkDaysIn(actS(i), actF(i))
+            For f = 1 To rmNFY
+                fs = DateSerial(rmY0 + f - 1, rmFyM, 1)
+                fe = DateSerial(rmY0 + f, rmFyM, 1)         ' 次の年度の初日
+                If w > 0 Then
+                    wf = WorkDaysIn(MaxL(actS(i), fs), MinL(actF(i), fe))
+                    If wf > 0 Then rmAmt(actRm(i), f) = rmAmt(actRm(i), f) + actAmt(i) * wf / w
+                ElseIf actS(i) >= fs And actS(i) < fe Then
+                    rmAmt(actRm(i), f) = rmAmt(actRm(i), f) + actAmt(i)
+                End If
+            Next f
+        End If
+    Next i
+    For f = 1 To rmNFY
+        For i = 1 To rmN
+            rmTot(f) = rmTot(f) + rmAmt(i, f)
+        Next i
+        rmTot(rmNFY + 1) = rmTot(rmNFY + 1) + rmTot(f)
+    Next f
+End Sub
+
+' 日 d の年度（年度の初めの年。年度の始まりが4月なら、2027/3/31 は 2026）
+Private Function FiscalYear(ByVal d As Long) As Long
+    FiscalYear = Year(CDate(d))
+    If Month(CDate(d)) < rmFyM Then FiscalYear = FiscalYear - 1
+End Function
+
+' ロードマップの日 d の左端の x 座標（月の列の中を日割り）
+Private Function RoadX(ByVal d As Long) As Double
+    Dim mi As Long, dd As Date
+    dd = CDate(d)
+    mi = (Year(dd) - rmY0) * 12 + Month(dd) - rmFyM       ' 目盛りの最初の月（rmY0 年の rmFyM 月）からの月数
+    RoadX = rmX0 + (mi + (Day(dd) - 1) / Day(DateSerial(Year(dd), Month(dd) + 1, 0))) * rmColW
+End Function
+
+' 「2027/1/12～2/4」のような期間（年が違えば終わりにも年を付ける。1日だけなら1つ）
+Private Function RoadSpan(ByVal s As Long, ByVal e As Long) As String
+    If e <= s Then
+        RoadSpan = Format(CDate(s), "yyyy/m/d")
+    ElseIf Year(CDate(e)) = Year(CDate(s)) Then
+        RoadSpan = Format(CDate(s), "yyyy/m/d") & "～" & Format(CDate(e), "m/d")
+    Else
+        RoadSpan = Format(CDate(s), "yyyy/m/d") & "～" & Format(CDate(e), "yyyy/m/d")
+    End If
+End Function
+
+' 見出しのセル（r1,c1～r2,c2 を結合して、紺の地に白の太字）
+Private Sub HeadCell(ByVal r1 As Long, ByVal c1 As Long, ByVal r2 As Long, ByVal c2 As Long, ByVal txt As String)
+    With wsC.Range(wsC.Cells(r1, c1), wsC.Cells(r2, c2))
+        If r2 > r1 Or c2 > c1 Then .Merge
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Interior.Color = RGB(31, 56, 100)
+        .Font.Color = RGB(255, 255, 255)
+        .Font.Bold = True
+        .Font.Size = 9
+    End With
+    wsC.Cells(r1, c1).Value = "'" & txt
+End Sub
+
+' ロードマップの目的の欄（行 r1～r2 を結合して塗る）
+Private Sub RoadPurpCell(ByVal r1 As Long, ByVal r2 As Long, ByVal col As Long, ByVal txt As String)
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(r2, col))
+        If r2 > r1 Then .Merge
+        .WrapText = True
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Font.Bold = True
+        .Font.Color = RGB(31, 56, 100)
+        .Interior.Color = RGB(217, 225, 242)
+    End With
+    wsC.Cells(r1, col).Value = "'" & txt
+    With wsC.Range(wsC.Cells(r2, col), wsC.Cells(r2, col)).Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .Color = RGB(118, 118, 118)
+    End With
+End Sub
+
+' ロードマップの期の帯（目盛りの上。重なる期は段を分ける）
+Private Sub RoadPhaseBars()
+    Dim p As Long, s As Shape, x1 As Double, x2 As Double
+    For p = 1 To nPhase
+        x1 = RoadX(phaseMinS(p))
+        x2 = RoadX(phaseMaxF(p))
+        Set s = wsC.Shapes.AddShape(msoShapeRectangle, x1, wsC.Rows(3 + phaseLevel(p)).Top + 2, _
+                                    MaxD(x2 - x1, 6), PHASE_ROW_HEIGHT - 4)
+        s.Fill.Visible = msoTrue
+        s.Fill.Solid
+        s.Fill.ForeColor.RGB = RGB(217, 225, 242)
+        s.Line.Visible = msoFalse
+        s.Shadow.Visible = msoFalse
+        With s.TextFrame2
+            .MarginLeft = 3
+            .MarginRight = 0
+            .MarginTop = 0
+            .MarginBottom = 0
+            .WordWrap = msoFalse
+            .VerticalAnchor = msoAnchorMiddle
+            With .TextRange
+                .Text = phaseName(p) & "（" & RoadSpan(phaseMinS(p), phaseLastDay(p)) & "）"
+                .Font.Size = 8
+                .Font.Bold = msoTrue
+                .Font.Fill.ForeColor.RGB = RGB(31, 56, 100)
+                .ParagraphFormat.Alignment = msoAlignLeft
+            End With
+        End With
+        NameShape s, "P"
+    Next p
+End Sub
+
+' ロードマップの1行：作業のある期間を帯で（14日までのすき間はつなぐ）、マイルストーンを◆と名前で
+Private Sub RoadBars(ByVal rw As Long, ByVal y As Double)
+    Dim i As Long, n As Long, m As Long, j As Long, segS() As Long, segF() As Long, curS As Long, curF As Long
+    Dim s As Shape, clr As Long, x As Double, t As Shape, txt As String, w As Double
+
+    clr = AutoColor(rmPurp(rw) - 1)
+    ReDim segS(1 To nAct): ReDim segF(1 To nAct)
+    For i = 1 To nAct
+        If actRm(i) = rw And actF(i) > actS(i) Then
+            n = n + 1
+            m = n                                   ' 始まりの順に並べる
+            Do While m > 1
+                If segS(m - 1) > actS(i) Then
+                    segS(m) = segS(m - 1)
+                    segF(m) = segF(m - 1)
+                    m = m - 1
+                Else
+                    Exit Do
+                End If
+            Loop
+            segS(m) = actS(i)
+            segF(m) = actF(i)
+        End If
+    Next i
+    j = 1
+    Do While j <= n
+        curS = segS(j)
+        curF = segF(j)
+        j = j + 1
+        Do While j <= n
+            If segS(j) - curF > 14 Then Exit Do
+            If segF(j) > curF Then curF = segF(j)
+            j = j + 1
+        Loop
+        Set s = wsC.Shapes.AddShape(msoShapeRectangle, RoadX(curS), y - 5, MaxD(RoadX(curF) - RoadX(curS), 2), 10)
+        s.Fill.Visible = msoTrue
+        s.Fill.Solid
+        s.Fill.ForeColor.RGB = clr
+        s.Line.Visible = msoFalse
+        s.Shadow.Visible = msoFalse
+        NameShape s, "B"
+    Loop
+    For i = 1 To nAct                               ' マイルストーン（日数0の作業）
+        If actRm(i) = rw And actF(i) <= actS(i) Then
+            x = RoadX(actS(i))
+            Set s = wsC.Shapes.AddShape(msoShapeDiamond, x - 5, y - 5, 10, 10)
+            s.Fill.Visible = msoTrue
+            s.Fill.Solid
+            s.Fill.ForeColor.RGB = RGB(192, 0, 0)
+            s.Line.Visible = msoFalse
+            s.Shadow.Visible = msoFalse
+            NameShape s, "M"
+            If Len(actDisp(i)) > 0 Then txt = OneLine("", actDisp(i)) Else txt = OneLine("", actName(i))
+            txt = txt & " " & Format(CDate(actS(i)), "m/d")
+            w = TextWidth(txt, 8) + 6
+            x = x - 4                                       ' 名前は◆の上に、◆の少し左から
+            If x + w > rmX0 + rmNFY * 12 * rmColW Then x = rmX0 + rmNFY * 12 * rmColW - w   ' 右端からはみ出さない
+            Set t = AddText(x, y - 11, txt, 8, RGB(192, 0, 0), False, 2, True)
+        End If
+    Next i
+End Sub
+
+
+'==============================================================================
 '  実績と遅れ（イナズマ線）  v8 で追加（ここから下はモジュールの最後）
 '==============================================================================
 ' 実績から、基準日の時点の進み・遅れと、この先の予測を計算する
@@ -4537,6 +5084,10 @@ End Function
 
 Private Function MaxL(ByVal a As Long, ByVal b As Long) As Long
     If a > b Then MaxL = a Else MaxL = b
+End Function
+
+Private Function MaxD(ByVal a As Double, ByVal b As Double) As Double
+    If a > b Then MaxD = a Else MaxD = b
 End Function
 
 ' 工程データの右に、進み・遅れと予測の列を書く（実績が無ければ前の結果を消すだけ）

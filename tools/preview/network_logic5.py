@@ -59,6 +59,12 @@ SAMPLE5 = [  # 目的, 工区, 工事, 期, まとめ, 作業ID, 作業名, 表�
 ]
 
 
+# 金額（千円。ロードマップの年度ごとの金額に使う）
+AMOUNTS = {"A-010": 300, "A-020": 1200, "B1-010": 200, "B1-020": 1800, "C1-010": 2500, "D1-010": 9800,
+           "E1-010": 3600, "E1-020": 900, "F1-010": 600, "B2-010": 200, "B2-020": 1500, "C2-010": 2500,
+           "D2-010": 9800, "E2-010": 3600, "E2-020": 900, "F2-010": 600, "F-020": 1500, "A-030": 800, "F-030": 400}
+
+
 def make_acts(rows=SAMPLE5):
     """先行作業と日数（工事する日の数）から開始・終了日を入れる。休工日は飛ばす（VBA の CalcDates と同じ置き方）"""
     fin, out = {}, [None] * len(rows)
@@ -75,7 +81,7 @@ def make_acts(rows=SAMPLE5):
                 out[i] = dict(purpose=pu, zone=z, kouji=k, phase=p, group=g, id=aid, name=nm, disp=disp, co=co, dur=d,
                               pred=pr,
                               start=dt.date.fromordinal(s), end=dt.date.fromordinal(s if d == 0 else f - 1),
-                              prog=0.0)
+                              prog=0.0, amount=AMOUNTS.get(aid, 0))
                 remaining.remove(i)
                 moved = True
         assert moved
