@@ -3056,7 +3056,7 @@ End Sub
 
 ' 枠線を消し、見出しを固定し、印刷の設定をする
 '   A3横・余白0・すべての行を1ページに（横は何ページになってもよい）。どのページにも、左に目的・工区・工事の列、
-'   上に表題～日付の目盛りの行を付ける（タイトル列・タイトル行）
+'   上に表題～日付の目盛りの行を付ける（タイトル列・タイトル行）。ページ番号は右上（表題の行の右は空いている）
 Private Sub FinishSheet()
     Dim lastCol As Long
 
@@ -3086,9 +3086,11 @@ Private Sub FinishSheet()
         .RightMargin = 0
         .TopMargin = 0
         .BottomMargin = 0
-        .HeaderMargin = 0
+        .HeaderMargin = Application.CentimetersToPoints(0.5)    ' ページ番号の位置（紙に印刷しても切れないように）
         .FooterMargin = 0
-        .CenterFooter = ""              ' 余白が0なので、ページ番号は入れない（図に重なるため）
+        .ScaleWithDocHeaderFooter = False                       ' 縮小してもページ番号は読める大きさのまま
+        .RightHeader = "&10&P / &N"                             ' ページ番号は右上（下は凡例と重なりやすい）
+        .CenterFooter = ""
     End With
     Application.PrintCommunication = True
     On Error GoTo 0
