@@ -76,7 +76,8 @@ Attribute VB_Name = "NetworkSchedule"
 '    ・矢線と文字は会社ごとの色です。「設定」の「会社の色」の表で、会社名の右のセル（B列）の
 '      塗りつぶし色を使います。表にない会社には自動で色を付けます
 '    ・クリティカルパスは、矢線の下の赤い帯・太線・太字・赤い○で示します
-'    ・土曜は薄い青、日曜は薄い赤で網掛けし、休工日（工事しない日）には斜線を引きます
+'    ・土曜は薄い青、日曜は薄い赤で網掛けし、休工日（工事しない日）には斜線を引きます。休みの曜日だけど
+'      工事する日（工事カレンダーの例外の日で ○ にした日）は薄い緑で網掛けします
 '
 '  前提・簡略化しているところ
 '    ・日数・余裕日数は、工事する日の数で数えます（休工日は数えません）
@@ -219,6 +220,7 @@ Private calcBaseDay As Long, movedApplied As Long, pushedCount As Long
 Private Const PROG_COLOR As Long = 8257766          ' イナズマ線の色 RGB(230, 0, 126)
 Private Const SAT_FILL As Long = 16247773           ' 土曜の網掛け RGB(221, 235, 247)
 Private Const SUN_FILL As Long = 15525116           ' 日曜の網掛け RGB(252, 228, 236)
+Private Const EXTRA_FILL As Long = 13561798         ' 休みの曜日だけど工事する日の網掛け RGB(198, 239, 206)
 Private Const HOL_HATCH As Long = 10921638          ' 休工日の斜線の色 RGB(166, 166, 166)
 Private actAS() As Variant, actAE() As Variant      ' 実績開始・実績終了（入力のまま）
 Private useProg As Boolean, showProg As Boolean, progT As Long, progTb As Long
@@ -1928,7 +1930,7 @@ End Function
 ' 表題・日付目盛り・網掛け（土日・休工日）・工事名
 Private Sub DrawGrid()
     Dim c As Long, d As Long, col As Long, lastCol As Long, lastLaneRow As Long
-    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean
+    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean, hasExtra As Boolean
     Dim bi As Long, b1 As Long, runEnd As Boolean
     Dim sv As Variant, txt As String, created As Variant
     Dim vMon() As Variant, vDay() As Variant, vWk() As Variant, clr As Long, runClr As Long, runCol As Long
@@ -1981,7 +1983,10 @@ Private Sub DrawGrid()
             End With
         End If
         clr = 0                                         ' 土曜は薄い青、日曜は薄い赤（日単位も週単位も）
-        If wd = vbSaturday Then
+        If IsExtraWorkDay(d) Then                       ' 休みの曜日だけど工事する日は薄い緑
+            clr = EXTRA_FILL
+            hasExtra = True
+        ElseIf wd = vbSaturday Then
             clr = SAT_FILL
         ElseIf wd = vbSunday Then
             clr = SUN_FILL
@@ -2035,7 +2040,8 @@ Private Sub DrawGrid()
     If Len(CellText(sv)) > 0 Then txt = "第" & CellText(sv) & "版　"
     txt = txt & "作成日：" & Format(created, "yyyy/mm/dd") & "　目盛り：" & IIf(weekScale, "週", "日") & "単位（"
     If weekScale Then txt = txt & "月曜始まり。点線は日の区切り。"
-    txt = txt & "網掛け：青＝土、赤＝日" & IIf(hasHol, "、斜線＝休工日", "") & "）"
+    txt = txt & "網掛け：青＝土、赤＝日" & IIf(hasExtra, "、緑＝休みの曜日の工事日", "") & _
+          IIf(hasHol, "、斜線＝休工日", "") & "）"
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
 
@@ -3352,6 +3358,15 @@ Private Function IsHoliday(ByVal d As Long) As Boolean
     Else
         IsHoliday = wdOff(Weekday(CDate(d), vbSunday))
     End If
+End Function
+
+' 休みの曜日だけど、工事カレンダーの例外の日で工事する日（○）にした日か
+Private Function IsExtraWorkDay(ByVal d As Long) As Boolean
+    Dim key As String
+    If holDict Is Nothing Then Exit Function
+    If Not wdOff(Weekday(CDate(d), vbSunday)) Then Exit Function
+    key = CStr(d)
+    If holDict.Exists(key) Then IsExtraWorkDay = Not holDict(key)
 End Function
 
 ' d が休工日なら、休工日でない日まで進める（休みが長すぎるときは途中でやめる）

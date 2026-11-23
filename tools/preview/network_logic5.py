@@ -28,6 +28,7 @@ NAME_FONT, SUB_FONT, GAP, LINE_PITCH = 8.0, 7.0, 2.0, 1.75
 INAZUMA = "#E6007E"  # イナズマ線（クリティカルパスの赤と見分ける）
 PURP_FILL, PURP_TXT, PURP_LINE = "#D9E1F2", "#1F3864", "#404040"  # 目的の欄の塗り・文字、目的の境目の線
 SAT_FILL, SUN_FILL, HOL_HATCH, SAT_TXT = "#DDEBF7", "#FCE4EC", "#A6A6A6", "#0070C0"  # 土・日の網掛け、休工日の斜線、土の文字
+EXTRA_FILL = "#C6EFCE"  # 休みの曜日だけど工事する日
 DAY_W, LANE_H, ARROW_OFF, NODE_D = 24.0, 44.0, 24.0, 12.0
 WEEK_DAY_W = 6.75  # 週単位の目盛りの1日の幅（VBA は列幅 0.7＝9px）
 R = NODE_D / 2
@@ -464,9 +465,11 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
         return lane_top[L] + lay["arrow_off"][L]
 
     has_hol = any(is_hol(vs + k) for k in range(ncols))
+    has_extra = any(v3.is_extra_work(vs + k) for k in range(ncols))
     ax.text(X0, row_title + 13, f"{title}　ネットワーク工程表{caption}", fontsize=14, weight="bold", va="center")
     sub_txt = ("第1版　作成日：2026/11/05　目盛り：" + ("週単位（月曜始まり。点線は日の区切り。" if week else "日単位（") +
-               "網掛け：青＝土、赤＝日" + ("、斜線＝休工日" if has_hol else "") + "）")
+               "網掛け：青＝土、赤＝日" + ("、緑＝休みの曜日の工事日" if has_extra else "") +
+               ("、斜線＝休工日" if has_hol else "") + "）")
     ax.text(X0, row_sub + 8, sub_txt, fontsize=9, va="center", color="#333333")
     if prog:
         ax.text(X0 + pt_w(sub_txt, 9) + 9, row_sub + 8, prog["summary"], fontsize=9, va="center", color=INAZUMA,
@@ -477,7 +480,7 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
         d = dt.date.fromordinal(vs + k)
         x = X(vs + k)
         wd = (d.weekday() + 1) % 7
-        fill = SAT_FILL if wd == 6 else (SUN_FILL if wd == 0 else None)
+        fill = EXTRA_FILL if v3.is_extra_work(vs + k) else (SAT_FILL if wd == 6 else (SUN_FILL if wd == 0 else None))
         if fill:
             ax.add_patch(Rectangle((x, row_day), day_w, chart_bottom - row_day, facecolor=fill, edgecolor="none",
                                    zorder=0))

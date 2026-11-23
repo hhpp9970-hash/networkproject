@@ -52,6 +52,11 @@ def is_hol(d):
     return (d - 1) % 7 in WD_OFF  # ordinal の 1（0001-01-01）は月曜
 
 
+def is_extra_work(d):
+    """VBA の IsExtraWorkDay と同じ：休みの曜日だけど、例外の日で工事する日（○）にした日"""
+    return (d - 1) % 7 in WD_OFF and d in WORK
+
+
 def is_work_mark(t, dflt):
     """VBA の IsWorkMark と同じ：○×の欄の読み方"""
     t = (t or "").strip()
