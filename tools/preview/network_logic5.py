@@ -27,6 +27,7 @@ plt.rcParams["font.family"] = next((f for f in ["Noto Sans CJK JP", "Yu Gothic",
 NAME_FONT, SUB_FONT, GAP, LINE_PITCH = 8.0, 7.0, 2.0, 1.75
 INAZUMA = "#E6007E"  # イナズマ線（クリティカルパスの赤と見分ける）
 PURP_FILL, PURP_TXT, PURP_LINE = "#D9E1F2", "#1F3864", "#404040"  # 目的の欄の塗り・文字、目的の境目の線
+SAT_FILL, SUN_FILL, HOL_HATCH, SAT_TXT = "#DDEBF7", "#FCE4EC", "#A6A6A6", "#0070C0"  # 土・日の網掛け、休工日の斜線、土の文字
 DAY_W, LANE_H, ARROW_OFF, NODE_D = 24.0, 44.0, 24.0, 12.0
 WEEK_DAY_W = 6.75  # 週単位の目盛りの1日の幅（VBA は列幅 0.7＝9px）
 R = NODE_D / 2
@@ -58,6 +59,7 @@ SAMPLE5 = [  # 目的, 工区, 工事, 期, まとめ, 作業ID, 作業名, 表�
 
 
 def make_acts(rows=SAMPLE5):
+    """先行作業と日数（工事する日の数）から開始・終了日を入れる。休工日は飛ばす（VBA の CalcDates と同じ置き方）"""
     fin, out = {}, [None] * len(rows)
     remaining = list(range(len(rows)))
     while remaining:
@@ -66,11 +68,12 @@ def make_acts(rows=SAMPLE5):
             pu, z, k, p, g, aid, nm, disp, co, d, pr = rows[i]
             ps = parse_preds(pr)
             if all(q in fin for q in ps):
-                s = max([fin[q] for q in ps], default=BASE.toordinal())
-                fin[aid] = s if d == 0 else s + d
+                s = v3.next_work(max([fin[q] for q in ps], default=BASE.toordinal()))
+                f = s if d == 0 else v3.add_work(s, d)
+                fin[aid] = f
                 out[i] = dict(purpose=pu, zone=z, kouji=k, phase=p, group=g, id=aid, name=nm, disp=disp, co=co, dur=d,
                               pred=pr,
-                              start=dt.date.fromordinal(s), end=dt.date.fromordinal(s if d == 0 else s + d - 1),
+                              start=dt.date.fromordinal(s), end=dt.date.fromordinal(s if d == 0 else f - 1),
                               prog=0.0)
                 remaining.remove(i)
                 moved = True
@@ -462,10 +465,8 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
 
     has_hol = any(is_hol(vs + k) for k in range(ncols))
     ax.text(X0, row_title + 13, f"{title}　ネットワーク工程表{caption}", fontsize=14, weight="bold", va="center")
-    if week:
-        sub_txt = "第1版　作成日：2026/11/05　目盛り：週単位（月曜始まり。点線は日の区切り）"
-    else:
-        sub_txt = "第1版　作成日：2026/11/05　目盛り：日単位（網掛け：灰色＝土日" + ("、赤＝休工日" if has_hol else "") + "）"
+    sub_txt = ("第1版　作成日：2026/11/05　目盛り：" + ("週単位（月曜始まり。点線は日の区切り。" if week else "日単位（") +
+               "網掛け：青＝土、赤＝日" + ("、斜線＝休工日" if has_hol else "") + "）")
     ax.text(X0, row_sub + 8, sub_txt, fontsize=9, va="center", color="#333333")
     if prog:
         ax.text(X0 + pt_w(sub_txt, 9) + 9, row_sub + 8, prog["summary"], fontsize=9, va="center", color=INAZUMA,
@@ -476,7 +477,14 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
         d = dt.date.fromordinal(vs + k)
         x = X(vs + k)
         wd = (d.weekday() + 1) % 7
-        if week:  # 週単位：日の境目は点線、週の境目（月曜）は実線、月の境目は濃い線。網掛けはしない
+        fill = SAT_FILL if wd == 6 else (SUN_FILL if wd == 0 else None)
+        if fill:
+            ax.add_patch(Rectangle((x, row_day), day_w, chart_bottom - row_day, facecolor=fill, edgecolor="none",
+                                   zorder=0))
+        if is_hol(vs + k):
+            ax.add_patch(Rectangle((x, lanes_top), day_w, chart_bottom - lanes_top, facecolor=fill or "white",
+                                   edgecolor=HOL_HATCH, hatch="////", lw=0, zorder=0.05))
+        if week:  # 週単位：日の境目は点線、週の境目（月曜）は実線、月の境目は濃い線
             if d.month != prev_month:
                 ax.text(x + 2, row_month + 8, f"{d.year}/{d.month}", fontsize=8, va="center")
                 if k > 0:
@@ -491,12 +499,6 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
             if bool(prog) and vs + k == prog["T"]:  # 基準日の印は曜日の行だけ
                 ax.add_patch(Rectangle((x, row_week), day_w, 14, facecolor=INAZUMA, edgecolor="none", zorder=0.7))
             continue
-        if is_hol(vs + k):
-            ax.add_patch(Rectangle((x, row_day), day_w, chart_bottom - row_day, facecolor=HOL_FILL,
-                                   edgecolor="none", zorder=0))
-        elif wd in (0, 6):
-            ax.add_patch(Rectangle((x, row_day), day_w, chart_bottom - row_day, facecolor="#F2F2F2",
-                                   edgecolor="none", zorder=0))
         if grid:  # 日の境目の罫線（薄い灰色の細線）
             ax.plot([x, x], [row_day, chart_bottom], color="#D9D9D9", lw=0.5, zorder=0.6)
         if d.month != prev_month:
@@ -510,7 +512,8 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
         ax.text(x + day_w / 2, row_day + 7, str(d.day), fontsize=7, ha="center", va="center",
                 color="white" if is_t else "black", weight="bold" if is_t else "normal")
         ax.text(x + day_w / 2, row_week + 7, wdays[wd], fontsize=7, ha="center", va="center",
-                color="white" if is_t else (RED if wd == 0 else "#000000"), weight="bold" if is_t else "normal")
+                color="white" if is_t else (RED if wd == 0 else (SAT_TXT if wd == 6 else "#000000")),
+                weight="bold" if is_t else "normal")
     ax.plot([X0, right], [lanes_top, lanes_top], color="#7F7F7F", lw=0.8)
     ax.plot([date_left, date_left], [row_month, chart_bottom], color="#7F7F7F", lw=0.8)
     if zn["puse"]:
@@ -790,9 +793,9 @@ if __name__ == "__main__":
     outdir = sys.argv[1]
     week = "--week" in sys.argv[2:]  # 週単位の目盛りで描く（ファイル名の末尾に _週）
     dw, tail = (WEEK_DAY_W, "_週") if week else (DAY_W, "")
-    v3.HOL.update(d.toordinal() for d, _ in HOLIDAYS)
+    v3.set_calendar(v3.load_sample_calendar())  # 工事カレンダー（土曜は休み、例外の日）
     acts = make_acts()
-    c = compute(acts)
+    c = compute(acts, is_hol=v3.is_hol)
     ph = collect_phases(acts, c)
     zn = collect_zones(acts)
     gr = collect_groups(acts, c, zn)

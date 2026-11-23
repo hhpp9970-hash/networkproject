@@ -20,7 +20,7 @@ Excel の VBA で、工事のネットワーク工程表（矢線式・時間軸
 | `images/` | README 用の完成イメージ |
 | `tools/build_bas.py` | チェック3つ → `.bas` を書く。`--verify` で src と `.bas` が同じか確かめる |
 | `tools/check_vba*.py` | VBA の静的チェック（下の「チェック」） |
-| `tools/make_sample_book.py` | サンプルのブックを作る（openpyxl）。作業は `tools/sample_tasks.json` |
+| `tools/make_sample_book.py` | サンプルのブックを作る（openpyxl）。作業は `tools/sample_tasks.json`、工事カレンダーは `tools/sample_calendar.json` |
 | `tools/preview/` | マクロと同じ計算を Python でなぞり、完成イメージを描く（matplotlib） |
 
 `.gitattributes` で `*.bas` の改行変換を止めている。`.bas` を Windows で clone しても CRLF のまま。
@@ -56,6 +56,7 @@ Excel の VBA で、工事のネットワーク工程表（矢線式・時間軸
 - 図形の作成と、セル・罫線への書き込みは遅い。列ごと・セルごとに Excel を呼ばず、配列やまとめた Range で書く
 - 作図中は `SpeedOn` / `SpeedOff`（再計算・イベント停止、Esc で中止）。長い処理のループには `Progress` を入れる
 - `End(xlUp)` はフィルターで隠れた行を飛ばす。工程データの最後の行は `DataLastRow`（テーブルならテーブルの最後の行も見る）で求める
+- `InStr(s, "")` は 1 を返す（空の文字で探すと「見つかった」になる）。空欄のセルの文字で探すときは先に長さを確かめる
 
 ## マクロの構造
 
@@ -97,7 +98,16 @@ DrawSheet
   全体工程は「日」でも 731 日を超えると週単位（v11 から、期のシート・詳細工程は「日」なら長くても日単位）。
   終わりのメッセージにシートごとの秒数と図形の数
 - **週単位の目盛り（v11）**：日付の列は週単位でも1日1列（列幅 0.7 の細い列）。週の境目（月曜）を実線、日の境目を点線にし、
-  ○が何日にあるか数えて読めるようにする。日付の行に月曜の日付。網掛けは日単位のときだけ。`XOf` は日単位と同じ計算
+  ○が何日にあるか数えて読めるようにする。日付の行に月曜の日付。`XOf` は日単位と同じ計算
+- **工事カレンダー（v11）**：「工事カレンダー」シート（無ければ前の版の「休工日」シート＝A列の日付がすべて休み）。
+  右に「曜日」の表（月～日の ○×）、左に例外の日の表（開始日・終了日・工事・内容。終了日が空欄なら1日、工事が空欄なら休み、
+  下の行が優先）。`IsHoliday` は例外の日に書いてあればそれ、なければ曜日の決まり（全部 × なら曜日の決まりは使わない）
+  - 日数・余裕日数は工事する日の数（`WorkDaysIn`・`StartFromEnd`）。チェックは「休工日に始まる・終わる」と「日数と開始～終了の
+    工事する日の数が合わない」。矢線の下の「n日」も工事する日の数
+  - 矢線の終点 `actFd`＝終了日の翌日から休工日を飛ばした日（まとめの終点・つながり・○・他の期の作業もこれ）。
+    休工日をはさんで続く作業と○を共有し、余裕に見えないようにする。工程データに書く日付（計算終了）は今までどおり
+  - ○を動かしたとき：始まりは次の工事する日へ、終わりは前の工事する日へ寄せ、日数は工事する日の数を書く
+  - 網掛け：土＝薄い青、日＝薄い赤（日単位も週単位も）、休工日＝斜線（段の行だけ）。曜日の文字は土＝青、日＝赤
 
 ## Python のプレビュー（tools/preview）
 
@@ -105,7 +115,8 @@ VBA を Excel で動かせないので、計算と配置を Python でなぞっ�
 `network_logic3` → `4` → `5` → `6` の順に上へ重ねている（前の関数を差し替えて使う）。
 
 - `python tools/preview/network_logic6.py 出力先` … 実績入り（基準日 1/26）の3シート。`--week` を付けると週単位の目盛り
-- `python tools/preview/network_logic5.py 出力先` … 実績なしの3シートと `sample5.json`（＝`tools/sample_tasks.json`）
+- `python tools/preview/network_logic5.py 出力先` … 実績なしの3シートと `sample5.json`（＝`tools/sample_tasks.json`）。
+  サンプルの日程は `tools/sample_calendar.json`（`network_logic3.set_calendar`）の休工日を飛ばして組む
 - `python tools/preview/test_progress.py` … 進捗の計算を、VBA を写した関数と 3000 通り突き合わせる
 - `python tools/preview/big_sample.py` … 4期・156件の工程で、シートごとの項目・結合点・図形のおおよその数
 - 必要なもの：Python 3.9 以上、matplotlib、openpyxl、日本語フォント（Noto Sans CJK JP、なければ 游ゴシック／メイリオ）

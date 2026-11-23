@@ -37,11 +37,63 @@ CO_SETTING = {"○○建設": "#2F5597", "○○電設": "#38761D", "○○電�
 PALETTE = ["#2F5597", "#38761D", "#7030A0", "#8C5A2B", "#1B7F86", "#B4407E", "#1F3864", "#7F7F00"]
 NEUTRAL, GHOST_C, RED, GRAY, BAND, HOL_FILL = "#404040", "#767676", "#C00000", "#595959", "#FF7C80", "#FCE4D6"
 
-HOL = set()
+HOL = set()     # 例外の日：工事しない（休工日）
+WORK = set()    # 例外の日：工事する（休みの曜日でも）
+WD_OFF = set()  # 工事しない曜日（weekday：月=0 … 日=6）
+WEEK_JA = "月火水木金土日"
 
 
 def is_hol(d):
-    return d in HOL
+    """VBA の IsHoliday と同じ：例外の日に書いてあればそれ、なければ曜日の決まり"""
+    if d in WORK:
+        return False
+    if d in HOL:
+        return True
+    return (d - 1) % 7 in WD_OFF  # ordinal の 1（0001-01-01）は月曜
+
+
+def is_work_mark(t, dflt):
+    """VBA の IsWorkMark と同じ：○×の欄の読み方"""
+    t = (t or "").strip()
+    if not t:
+        return dflt
+    if "×" in t or "休" in t or "ない" in t or "不可" in t or t.lower() == "x":
+        return False
+    if any(k in t for k in ("○", "◯", "〇", "可", "する", "できる", "出")) or t.lower() == "o":
+        return True
+    return dflt
+
+
+def set_calendar(cal):
+    """工事カレンダー（tools/sample_calendar.json の形）を読み込む。VBA の LoadHolidays と同じく下の行ほど優先"""
+    HOL.clear()
+    WORK.clear()
+    WD_OFF.clear()
+    for ch, mark in cal.get("weekdays", {}).items():
+        if ch[:1] in WEEK_JA and not is_work_mark(mark, True):
+            WD_OFF.add(WEEK_JA.index(ch[:1]))
+    if len(WD_OFF) == 7:  # すべて休みなら曜日の決まりは使わない
+        WD_OFF.clear()
+    for e in cal.get("days", []):
+        d1 = dt.date.fromisoformat(e["start"]).toordinal()
+        d2 = dt.date.fromisoformat(e["end"]).toordinal() if e.get("end") else d1
+        d1, d2 = min(d1, d2), max(d1, d2)
+        off = not is_work_mark(e.get("work", ""), False)
+        for d in range(d1, d2 + 1):
+            (HOL if off else WORK).add(d)
+            (WORK if off else HOL).discard(d)
+
+
+def load_sample_calendar():
+    """サンプルの工事カレンダー（tools/sample_calendar.json）"""
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parent.parent / "sample_calendar.json"
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def work_days_in(s, f):
+    """s から f の前日までの工事する日の数（VBA の WorkDaysIn）"""
+    return sum(1 for d in range(s, f) if not is_hol(d))
 
 
 def next_work(d):
@@ -75,18 +127,24 @@ def last_day(c, i):
 
 
 def check_dates(acts, c):
+    """VBA の CheckDates と同じ：休工日に始まる・終わる作業と、日数と開始～終了の工事する日の数が合わない作業"""
+    def md(d):
+        d = dt.date.fromordinal(d)
+        return f"{d.month}/{d.day}"
+
     msgs = {}
     for i, a in enumerate(acts):
-        if a["start"] and a["end"] and c["F"][i] > c["S"][i]:
-            hits = [d for d in range(c["S"][i], c["F"][i]) if is_hol(d)]
-            m = []
-            if hits:
-                txt = "・".join(f"{dt.date.fromordinal(d).month}/{dt.date.fromordinal(d).day}" for d in hits[:3])
-                m.append(f"休工日（{txt}{'ほか' if len(hits) > 3 else ''}）にかかっています")
-            if a["dur"] and a["dur"] > 0 and c["F"][i] - c["S"][i] != a["dur"]:
-                m.append(f"日数（{a['dur']}日）と開始〜終了（{c['F'][i] - c['S'][i]}日）が合いません")
-            if m:
-                msgs[a["id"]] = m
+        S, F, m = c["S"][i], c["F"][i], []
+        if a["start"] and is_hol(S):
+            m.append(f"休工日（{md(S)}）に始まっています")
+        if a["end"] and F > S and is_hol(F - 1):
+            m.append(f"休工日（{md(F - 1)}）に終わっています")
+        if a["start"] and a["end"] and a["dur"] and a["dur"] > 0 and F > S:
+            n = work_days_in(S, F)
+            if n != a["dur"]:
+                m.append(f"日数（{a['dur']}日）と開始～終了の工事する日（{n}日）が合いません")
+        if m:
+            msgs[a["id"]] = m
     return msgs
 
 
@@ -410,14 +468,14 @@ def sub_label(acts, c, gr, it):
         g = gr["G"][it["group"]]
         t = g["co_label"]
         if g["F"] > g["S"]:
-            t += ("・" if t else "") + f"{g['F'] - g['S']}日"
+            t += ("・" if t else "") + f"{work_days_in(g['S'], g['F'])}日"
         if g["prog"] > 0:
             t += ("・" if t else "") + f"{g['prog']:.0%}"
         return t
     a = acts[i]
     t = a["co"]
     if c["F"][i] > c["S"][i]:
-        t += ("・" if t else "") + f"{c['F'][i] - c['S'][i]}日"
+        t += ("・" if t else "") + f"{work_days_in(c['S'][i], c['F'][i])}日"
     if a["prog"] > 0:
         t += ("・" if t else "") + f"{a['prog']:.0%}"
     return t

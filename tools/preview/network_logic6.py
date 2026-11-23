@@ -22,13 +22,13 @@ from network_logic3 import (HOLIDAYS, KIND_ACT, KIND_FROM, KIND_SUM, KIND_TO, ad
 from network_logic4 import collect_groups, collect_zones
 
 STATUS = dt.date(2027, 1, 26)
-ACTUALS = {  # 作業ID: (実績開始, 実績終了, 進捗)
+ACTUALS = {  # 作業ID: (実績開始, 実績終了, 進捗)  土曜は休み（工事カレンダー）
     "A-010": ("1/12", "1/14", None),
-    "A-020": ("1/15", "1/18", None),   # 1日遅れて完了
-    "B1-010": ("1/19", "1/19", None),  # 1日遅れて完了
-    "B1-020": ("1/20", None, 0.75),    # 撤去に手間取っている
-    "B2-010": ("1/22", "1/22", None),  # 前倒しで完了
-    "B2-020": ("1/23", "1/26", None),  # 予定（1/24～1/27）より早く完了
+    "A-020": ("1/15", "1/19", None),   # 1日遅れて完了（予定 1/15～1/18）
+    "B1-010": ("1/20", "1/20", None),  # 1日遅れて完了（予定 1/19）
+    "B1-020": ("1/21", None, 0.75),    # 撤去に手間取っている（予定 1/20～1/24）
+    "B2-010": ("1/24", "1/24", None),  # 前倒しで完了（予定 1/25）
+    "B2-020": ("1/25", "1/26", None),  # 予定（1/26～1/29）より早く完了
 }
 ORIG_SUB = v3.sub_label
 PROG = {}
@@ -188,14 +188,14 @@ def sub_label(acts, c, gr, it):
         G = gr["G"][it["group"]]
         t = G["co_label"]
         if G["F"] > G["S"]:
-            t += ("・" if t else "") + f"{G['F'] - G['S']}日"
+            t += ("・" if t else "") + f"{work_days(G['S'], G['F'])}日"
         q = P["gp"][it["group"]]
     else:
         i = it["act"]
         a = acts[i]
         t = a["co"]
         if c["F"][i] > c["S"][i]:
-            t += ("・" if t else "") + f"{c['F'][i] - c['S'][i]}日"
+            t += ("・" if t else "") + f"{work_days(c['S'][i], c['F'][i])}日"
         q = 1.0 if P["st"][i] == 2 else P["p"][i]
     if q >= 0.999999:
         t += ("・" if t else "") + "完了"
@@ -235,10 +235,10 @@ if __name__ == "__main__":
     outdir = sys.argv[1]
     week = "--week" in sys.argv[2:]  # 週単位の目盛りで描く（ファイル名の末尾に _週）
     dw, tail = (v5.WEEK_DAY_W, "_週") if week else (v5.DAY_W, "")
-    v3.HOL.update(d.toordinal() for d, _ in HOLIDAYS)
+    v3.set_calendar(v3.load_sample_calendar())  # 工事カレンダー（土曜は休み、例外の日）
     acts = v5.make_acts()
     apply_actuals(acts)
-    c = compute(acts)
+    c = compute(acts, is_hol=v3.is_hol)
     ph = collect_phases(acts, c)
     zn = collect_zones(acts)
     gr = collect_groups(acts, c, zn)

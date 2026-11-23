@@ -73,7 +73,28 @@ def make_sample_dates():
 
 
 # ---------------------------------------------------------------- VBAと同じ手順
-def compute(acts, base_day=None):
+def compute(acts, base_day=None, is_hol=None):
+    """is_hol を渡すと VBA と同じく、余裕を工事する日の数で数え、矢線の終点 FD を休工日の先まで伸ばす"""
+    if is_hol is None:
+        def is_hol(d):
+            return False
+
+    def wdays(s, f):
+        return sum(1 for d in range(s, f) if not is_hol(d))
+
+    def from_end(e, dur):  # VBA の StartFromEnd
+        d, cnt = e + 1, 0
+        while cnt < dur:
+            d -= 1
+            if not is_hol(d):
+                cnt += 1
+        return d
+
+    def next_work(d):
+        while is_hol(d):
+            d += 1
+        return d
+
     n = len(acts)
     msgs = [[] for _ in range(n)]
     idx = {}
@@ -132,19 +153,24 @@ def compute(acts, base_day=None):
     pe = max(F)
     lateF = [0] * n
     TF = [0] * n
+    def late_start(j):  # 後の作業の最も遅い開始：最も遅い終わりから、工事する日の数だけさかのぼる
+        w = wdays(S[j], F[j])
+        return from_end(lateF[j] - 1, w) if w > 0 else lateF[j]
+
     for i in reversed(topo):
         if succs[i]:
-            lf = min(lateF[j] - (F[j] - S[j]) for j in succs[i])
+            lf = min(late_start(j) for j in succs[i])
         else:
             lf = pe
         lateF[i] = lf
-        TF[i] = lf - F[i]
+        TF[i] = wdays(F[i], lf) if lf >= F[i] else lf - F[i]
     crit = [t <= 0 for t in TF]
+    FD = [next_work(F[i]) if F[i] > S[i] else F[i] for i in range(n)]  # 矢線の終点
     for i in range(n):
         for p in preds[i]:
             if S[i] < F[p]:
                 msgs[i].append(f"先行作業「{acts[p]['id']}」の終了前に開始しています")
-    return dict(n=n, preds=preds, succs=succs, S=S, F=F, TF=TF, crit=crit, msgs=msgs, topo=topo)
+    return dict(n=n, preds=preds, succs=succs, S=S, F=F, FD=FD, TF=TF, crit=crit, msgs=msgs, topo=topo)
 
 
 def assign_lanes(acts, c):
