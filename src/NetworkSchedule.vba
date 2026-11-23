@@ -43,7 +43,8 @@ Attribute VB_Name = "NetworkSchedule"
 '  大きな工程表（重さ）
 '    ・作図中はステータスバー（画面のいちばん下）に進み具合を出します。Esc キーで中止できます
 '    ・目盛りの「自動」（空欄も同じ）は、期間が半年までのシートは日単位、それより長いシートは週単位にします。
-'      「日」にしていても、期間が2年を超えるシートは週単位で描きます（列が多すぎて重くなるため）
+'      全体工程は「日」にしていても、期間が2年を超えると週単位で描きます（横に長くなりすぎて読めないため）。
+'      期ごとのシートと「詳細工程」は、「日」にすれば長くても日単位で描きます
 '    ・作図が終わったら、シートごとにかかった時間と図形の数を表示します
 '
 '  縦軸
@@ -59,19 +60,30 @@ Attribute VB_Name = "NetworkSchedule"
 '      （会社・日数は下）に積みます。段の高さはラベルに合わせて増やします
 '    ・マイルストーン（日数0）は、○の横（矢線の高さ）に「作業ID 名前（会社）」と1行で書きます
 '
+'  工事カレンダー（「工事カレンダー」シート。無ければ前の版の「休工日」シートを読みます）
+'    ・曜日ごとの決まり：「曜日」の表に、月～日それぞれ ○（工事する）か ×（工事しない）を書きます
+'    ・例外の日：「開始日」「終了日」「工事」「内容」の表に、連休・臨時の休み（×）や、休みの曜日・連休・祝日などに
+'      工事する日（○。臨時の工事日）を書きます。終了日が空欄なら1日だけ。「工事」が空欄なら休み。1日だけの指定や短い期間は、
+'      長い期間より優先します（同じ長さなら下の行が優先）
+'    ・工事しない日（休工日）は、開始・終了が空欄の作業を自動で置くときと、日数（工事する日の数）・余裕日数を
+'      数えるときに飛ばします
+'
 '  目盛り
-'    ・日（週単位のときは週）の境目に薄い縦線を引きます。結合点（○）はこの線の上に乗ります
-'      （線の右の日に始まり、左の日に終わる点）
+'    ・日の境目に薄い縦線を引きます。結合点（○）はこの線の上に乗ります（線の右の日に始まり、左の日に終わる点）
+'    ・週単位の目盛りでも列は1日ずつ（細い列）で、週の境目（月曜）を実線、日の境目を点線にします。
+'      日付の行には月曜の日付を書きます。○が何日にあるかは、月曜の線から点線を数えて読みます
 '
 '  色と記号
 '    ・矢線と文字は会社ごとの色です。「設定」の「会社の色」の表で、会社名の右のセル（B列）の
 '      塗りつぶし色を使います。表にない会社には自動で色を付けます
 '    ・クリティカルパスは、矢線の下の赤い帯・太線・太字・赤い○で示します
-'    ・「休工日」シートの日は赤、土日は灰色で網掛けします
+'    ・土曜は薄い青、日曜は薄い赤で網掛けし、休工日（工事しない日）には斜線を引きます。臨時の工事日
+'      （工事カレンダーの例外の日で ○ にした日）は薄い緑で網掛けします
 '
 '  前提・簡略化しているところ
-'    ・日数は暦日で数えます。ただし「休工日」シートの日は作業しない日として扱い、
-'      開始・終了が空欄の作業を自動で置くときは飛ばします
+'    ・日数・余裕日数は、工事する日の数で数えます（休工日は数えません）
+'    ・作業が終わったあとに休工日が続くときは、矢線を次の工事する日の頭まで伸ばして描きます
+'      （休工日をはさんで続く作業と結合点を共有し、余裕に見えないようにするため）
 '    ・先行作業は「先行作業が終わってから開始する」関係として扱います
 '    ・日数が0の作業はマイルストーン（結合点だけ）として描きます
 '    ・同じ工事の中で期間が重なる作業は、段を分けて描きます
@@ -89,7 +101,8 @@ Option Explicit
 ' ---- シート名など ----
 Private Const DATA_SHEET As String = "工程データ"
 Private Const SETTING_SHEET As String = "設定"
-Private Const HOLIDAY_SHEET As String = "休工日"
+Private Const CALENDAR_SHEET As String = "工事カレンダー"   ' 曜日ごとの決まりと例外の日（休工日・工事する日）
+Private Const HOLIDAY_SHEET As String = "休工日"            ' 前の版のシート（工事カレンダーが無いときに読む）
 Private Const OVERALL_SHEET As String = "全体工程"
 Private Const DETAIL_SHEET As String = "詳細工程"
 Private Const COMMON_ZONE As String = "共通"         ' 工区（目的）が空欄の作業をまとめる名前
@@ -103,14 +116,14 @@ Private Const NODE_TAG As String = "NWNODE"          ' 動かせる○の目印�
 ' ---- レイアウト ----
 Private Const LABEL_COL_WIDTH As Double = 16    ' 工事名の列の幅
 Private Const DAY_COL_WIDTH As Double = 3.4     ' 日単位のときの1日分の列幅
-Private Const WEEK_COL_WIDTH As Double = 7      ' 週単位のときの1週分の列幅
+Private Const WEEK_DAY_COL_WIDTH As Double = 0.7 ' 週単位のときの1日分の列幅（1週でおよそ7文字分）
 Private Const ZONE_COL_WIDTH As Double = 10     ' 工区名の列の幅（工区があるとき）
 Private Const PURP_COL_WIDTH As Double = 12     ' 目的の列（A列）の幅（目的があるとき）
 Private Const LANE_HEIGHT As Double = 44        ' 1段の高さ（pt）
 Private Const ARROW_OFFSET As Double = 24       ' 段の上端から矢線までの距離（pt）
 Private Const NODE_D As Double = 12             ' 結合点（○）の直径（pt）
 Private Const MIN_DAY_COLS As Long = 40         ' 日単位の最小列数（凡例が収まる幅）
-Private Const MIN_WEEK_COLS As Long = 18        ' 週単位の最小列数
+Private Const MIN_WEEK_COLS As Long = 18        ' 週単位の最小の週数
 Private Const AUTO_DAY_SPAN As Long = 184       ' 目盛りが「自動」のとき、日単位にする期間の上限（日）
 Private Const MAX_DAY_SPAN As Long = 731        ' 「日」にしていても、これより長い期間は週単位にする（日）
 Private Const NAME_FONT As Double = 8           ' 矢線の上（作業ID・作業名）の文字サイズ
@@ -138,6 +151,7 @@ Private actId() As String, actName() As String, actDisp() As String, actCo() As 
 Private actDur() As Long, actDurKnown() As Boolean, actPredText() As String
 Private actStartIn() As Variant, actEndIn() As Variant, actProg() As Double, actRow() As Long
 Private actS() As Long          ' 開始日（日付のシリアル値）
+Private actFd() As Long         ' 矢線の終点（終了日の翌日。休工日が続くときは次の工事する日）
 Private actF() As Long          ' 終了日の翌日（シリアル値）＝矢線の終点の位置
 Private actTF() As Long         ' 全余裕（日）
 Private actCrit() As Boolean    ' クリティカルパス上の作業か
@@ -163,7 +177,8 @@ Private gCoLabel() As String, gCoName() As String, gProg() As Double
 
 ' ---- 会社の色・休工日 ----
 Private coDict As Object, nCo As Long, coOrder() As String
-Private holDict As Object
+Private holDict As Object       ' 例外の日 → True（休み）／False（工事する）
+Private wdOff(1 To 7) As Boolean    ' 工事しない曜日（Weekday の 1＝日 … 7＝土）
 
 ' ---- 1枚のシートに描くもの（シートごとに作り直す） ----
 Private nItem As Long
@@ -190,7 +205,8 @@ Private sdFrom() As Long, sdTo() As Long, sdSlot() As Long
 ' ---- 描画 ----
 Private wsC As Worksheet
 Private sheetMode As Long, isOverall As Boolean, useSummary As Boolean, sheetCaption As String
-Private viewStart As Long, viewEnd As Long, nCols As Long, daysPerCol As Long, dayW As Double
+Private viewStart As Long, viewEnd As Long, nCols As Long, dayW As Double
+Private weekScale As Boolean    ' 週単位の目盛り（列は1日ずつのまま細くし、週の境目を実線・日の境目を点線にする）
 Private labelCols As Long, dateCol As Long      ' 縦軸の列数（目的・工区・工事のうち使うもの）と、日付目盛りの開始列
 Private zoneCol As Long                         ' 工区の列（工区が無ければ 0）。目的があれば A列、工事は labelCols 列
 Private nPhaseRows As Long, rowMonth As Long, rowDay As Long, rowWeekday As Long, firstLaneRow As Long
@@ -203,6 +219,10 @@ Private pickId As String, pickSheet As String, pickX As Double, pickY As Double,
 Private calcBaseDay As Long, movedApplied As Long, pushedCount As Long
 ' ---- 実績と遅れ（イナズマ線）v8 ----
 Private Const PROG_COLOR As Long = 8257766          ' イナズマ線の色 RGB(230, 0, 126)
+Private Const SAT_FILL As Long = 16247773           ' 土曜の網掛け RGB(221, 235, 247)
+Private Const SUN_FILL As Long = 15525116           ' 日曜の網掛け RGB(252, 228, 236)
+Private Const EXTRA_FILL As Long = 13561798         ' 臨時の工事日（例外の日で ○）の網掛け RGB(198, 239, 206)
+Private Const HOL_HATCH As Long = 10921638          ' 休工日の斜線の色 RGB(166, 166, 166)
 Private actAS() As Variant, actAE() As Variant      ' 実績開始・実績終了（入力のまま）
 Private useProg As Boolean, showProg As Boolean, progT As Long, progTb As Long
 Private prgState() As Long, prgP() As Double, prgDelay() As Double, prgPlan() As Double, prgWd() As Long
@@ -262,10 +282,10 @@ Public Sub DrawNetworkSchedule()
     movedApplied = 0
     pushedCount = 0
     Set movedIds = New Collection
+    LoadHolidays        ' 工事カレンダー（動かした○を日付にするときにも使う）
     If Not ApplyMovedNodes(wsD, movedIds) Then GoTo CleanUp
 
     If Not LoadData(wsD) Then GoTo CleanUp
-    LoadHolidays
     BuildLinks
     If Not SortByLinks() Then GoTo CleanUp
     CalcDates
@@ -273,13 +293,13 @@ Public Sub DrawNetworkSchedule()
         ' 後に続く作業を後ろへずらしたら、工程データを読み直して計算し直す
         If PushSuccessors(wsD, movedIds) Then
             If Not LoadData(wsD) Then GoTo CleanUp
-            LoadHolidays
             BuildLinks
             If Not SortByLinks() Then GoTo CleanUp
             CalcDates
         End If
     End If
     CalcFloat
+    CalcDrawEnds
     CheckLogic
     CheckDates
     CollectPhases
@@ -465,7 +485,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
         Exit Function
     End If
 
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     nAct = 0
     For r = hdr + 1 To lastRow
         If Len(CellText(ws.Cells(r, cId).Value)) > 0 Then nAct = nAct + 1
@@ -525,26 +545,139 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     LoadData = True
 End Function
 
-' 「休工日」シートのA列の日付を読む（シートが無ければ休工日なし）
+' 工事カレンダーを読む（シートが無ければ、どの日も工事する日）
+'   ・曜日ごとの決まり：「曜日」と書いたセルの下に 月～日、その右のセルに ○（工事する）か ×（工事しない）
+'   ・例外の日：見出し「開始日」（前の版の「休工日」シートは「日付」）の列に日付。「終了日」の列に日付があれば期間。
+'     「工事」の列が ○ なら工事する日、× か空欄なら休み。期間の長い行から当てはめるので、1日だけの指定や短い期間が
+'     優先（同じ長さなら下の行が優先）。連休の中の工事日は、連休の行と順番に関係なく ○ にできる
+'   ・見出しが無ければ、A列の日付をすべて休みとして読む（前の版の「休工日」シート）
 Private Sub LoadHolidays()
-    Dim ws As Worksheet, r As Long, lastRow As Long, v As Variant, key As String
+    Dim ws As Worksheet, r As Long, k As Long, wr As Long, wc As Long, lastRow As Long, hdr As Long
+    Dim cS As Long, cE As Long, cW As Long, d As Long, d1 As Long, d2 As Long, noWork As Boolean, v As Variant
+    Dim ex1() As Long, ex2() As Long, exOff() As Boolean, exOrd() As Long, nEx As Long, j As Long, m As Long
 
     Set holDict = CreateObject("Scripting.Dictionary")
+    For k = 1 To 7
+        wdOff(k) = False
+    Next k
     On Error Resume Next
-    Set ws = ThisWorkbook.Worksheets(HOLIDAY_SHEET)
+    Set ws = ThisWorkbook.Worksheets(CALENDAR_SHEET)
+    If ws Is Nothing Then Set ws = ThisWorkbook.Worksheets(HOLIDAY_SHEET)
     On Error GoTo 0
     If ws Is Nothing Then Exit Sub
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
-    For r = 1 To lastRow
-        v = ws.Cells(r, 1).Value
+
+    ' 曜日ごとの決まり
+    If FindCell(ws, "曜日", wr, wc) Then
+        For r = wr + 1 To wr + 7
+            v = Left$(CellText(ws.Cells(r, wc).Value), 1)
+            k = 0
+            If Len(v) > 0 Then k = InStr("日月火水木金土", v)    ' 空欄は InStr が 1 を返すので除く
+            If k > 0 Then wdOff(k) = Not IsWorkMark(CellText(ws.Cells(r, wc + 1).Value), True)
+        Next r
+        For k = 1 To 7
+            If Not wdOff(k) Then Exit For
+        Next k
+        If k > 7 Then       ' すべての曜日が休みだと、作業を置ける日がない
+            For k = 1 To 7
+                wdOff(k) = False
+            Next k
+            MsgBox "「" & ws.Name & "」で、すべての曜日が × になっています。曜日の決まりは使わずに作図します。", _
+                   vbExclamation
+        End If
+    End If
+
+    ' 例外の日（1日、または開始日～終了日）
+    hdr = FindHeaderRow(ws, "開始日")
+    If hdr > 0 Then
+        cS = FindCol(ws, hdr, "開始日")
+    Else
+        hdr = FindHeaderRow(ws, "日付")
+        If hdr > 0 Then cS = FindCol(ws, hdr, "日付") Else cS = 1
+    End If
+    If hdr > 0 Then
+        cE = FindCol(ws, hdr, "終了日")
+        cW = FindCol(ws, hdr, "工事")       ' 曜日の表の「工事」より左にあるもの（例外の表の列）
+    End If
+    lastRow = ws.Cells(ws.Rows.Count, cS).End(xlUp).Row
+    If lastRow > hdr Then
+        ReDim ex1(1 To lastRow - hdr): ReDim ex2(1 To lastRow - hdr)
+        ReDim exOff(1 To lastRow - hdr): ReDim exOrd(1 To lastRow - hdr)
+    End If
+    For r = hdr + 1 To lastRow
+        v = ws.Cells(r, cS).Value
         If Not IsError(v) Then
             If IsDate(v) Then
-                key = CStr(DaySerial(v))
-                If Not holDict.Exists(key) Then holDict.Add key, True
+                d1 = DaySerial(v)
+                d2 = d1
+                If cE > 0 Then
+                    v = ws.Cells(r, cE).Value
+                    If Not IsError(v) Then
+                        If IsDate(v) Then d2 = DaySerial(v)
+                    End If
+                End If
+                If d2 < d1 Then
+                    d = d1
+                    d1 = d2
+                    d2 = d
+                End If
+                If d2 - d1 > 3660 Then d2 = d1 + 3660       ' 書き間違いで長すぎる期間は10年まで
+                noWork = True
+                If cW > 0 Then noWork = Not IsWorkMark(CellText(ws.Cells(r, cW).Value), False)
+                nEx = nEx + 1
+                ex1(nEx) = d1
+                ex2(nEx) = d2
+                exOff(nEx) = noWork
+                m = nEx                                     ' 期間の長い順に並べる（同じ長さは書いた順のまま）
+                Do While m > 1
+                    If ex2(exOrd(m - 1)) - ex1(exOrd(m - 1)) < d2 - d1 Then
+                        exOrd(m) = exOrd(m - 1)
+                        m = m - 1
+                    Else
+                        Exit Do
+                    End If
+                Loop
+                exOrd(m) = nEx
             End If
         End If
     Next r
+
+    ' 長い期間から当てはめる（あとの行が上書きする）
+    For j = 1 To nEx
+        k = exOrd(j)
+        For d = ex1(k) To ex2(k)
+            holDict(CStr(d)) = exOff(k)
+        Next d
+    Next j
 End Sub
+
+' ○×の欄の読み方：×・休・ない（しない／できない）・不可・x → 工事しない、○・◯・〇・可・する・できる・出・o → 工事する、
+' それ以外（空欄など）→ dflt
+Private Function IsWorkMark(ByVal t As String, ByVal dflt As Boolean) As Boolean
+    t = Trim$(t)
+    IsWorkMark = dflt
+    If Len(t) = 0 Then Exit Function
+    If InStr(t, "×") > 0 Or InStr(t, "休") > 0 Or InStr(t, "ない") > 0 Or InStr(t, "不可") > 0 Or LCase$(t) = "x" Then
+        IsWorkMark = False
+    ElseIf InStr(t, "○") > 0 Or InStr(t, "◯") > 0 Or InStr(t, "〇") > 0 Or InStr(t, "可") > 0 Or _
+           InStr(t, "する") > 0 Or InStr(t, "できる") > 0 Or InStr(t, "出") > 0 Or LCase$(t) = "o" Then
+        IsWorkMark = True
+    End If
+End Function
+
+' シートの左上（30行×30列）から、文字がちょうど txt のセルを探す
+Private Function FindCell(ByVal ws As Worksheet, ByVal txt As String, ByRef fr As Long, ByRef fc As Long) As Boolean
+    Dim r As Long, c As Long
+    For r = 1 To 30
+        For c = 1 To 30
+            If CellText(ws.Cells(r, c).Value) = txt Then
+                fr = r
+                fc = c
+                FindCell = True
+                Exit Function
+            End If
+        Next c
+    Next r
+End Function
 
 ' 先行作業の文字列を、作業の添字のつながりに直す
 Private Sub BuildLinks()
@@ -663,9 +796,9 @@ Private Sub CalcDates()
     Next k
 End Sub
 
-' 全余裕とクリティカルパス（後ろから計算）
+' 全余裕とクリティカルパス（後ろから計算）。余裕は工事する日の数で数える（休工日をはさんでも余裕にしない）
 Private Sub CalcFloat()
-    Dim k As Long, i As Long, pe As Long, lf As Long, ls As Long, v As Variant
+    Dim k As Long, i As Long, pe As Long, lf As Long, ls As Long, v As Variant, w As Long
     Dim lateF() As Long
 
     ReDim lateF(1 To nAct)
@@ -680,14 +813,26 @@ Private Sub CalcFloat()
         Else
             lf = 2147483647
             For Each v In succs(i)
-                ls = lateF(v) - (actF(v) - actS(v))
+                ' 後の作業の最も遅い開始：その最も遅い終わりから、工事する日の数だけさかのぼる
+                w = WorkDaysIn(actS(v), actF(v))
+                If w > 0 Then ls = StartFromEnd(lateF(v) - 1, w) Else ls = lateF(v)
                 If ls < lf Then lf = ls
             Next v
         End If
         lateF(i) = lf
-        actTF(i) = lf - actF(i)
+        If lf >= actF(i) Then actTF(i) = WorkDaysIn(actF(i), lf) Else actTF(i) = lf - actF(i)
         actCrit(i) = (actTF(i) <= 0)
     Next k
+End Sub
+
+' 矢線の終点：終了日の翌日から休工日が続くときは、次の工事する日の頭まで伸ばす
+' （休工日をはさんで続く作業と結合点を共有するため。マイルストーンはそのまま）
+Private Sub CalcDrawEnds()
+    Dim i As Long
+    ReDim actFd(1 To nAct)
+    For i = 1 To nAct
+        If actF(i) > actS(i) Then actFd(i) = NextWorkDay(actF(i)) Else actFd(i) = actF(i)
+    Next i
 End Sub
 
 ' 先行作業の終了前に始まっている作業を指摘する
@@ -700,25 +845,24 @@ Private Sub CheckLogic()
     Next i
 End Sub
 
-' 日付のチェック（開始・終了が入力されている作業だけ）
-'   ・休工日にかかっていないか
-'   ・「日数」と、開始～終了の日数（暦日）が合うか
+' 日付のチェック（開始・終了が入力されている作業）
+'   ・休工日に始まっていないか・休工日に終わっていないか（途中に休工日をはさむのはよい）
+'   ・「日数」と、開始～終了の工事する日の数が合うか（開始・終了の両方が入っているとき）
 Private Sub CheckDates()
-    Dim i As Long, d As Long, n As Long, hits As String
+    Dim i As Long, n As Long, e As Long
     For i = 1 To nAct
-        If IsDate(actStartIn(i)) And IsDate(actEndIn(i)) Then
-            If actF(i) > actS(i) Then
-                hits = ""
-                n = 0
-                For d = actS(i) To actF(i) - 1
-                    If IsHoliday(d) Then
-                        n = n + 1
-                        If n <= 3 Then hits = hits & IIf(Len(hits) > 0, "・", "") & Format(CDate(d), "m/d")
-                    End If
-                Next d
-                If n > 0 Then AddMsg i, "休工日（" & hits & IIf(n > 3, "ほか", "") & "）にかかっています"
-                If actDurKnown(i) And actDur(i) > 0 And (actF(i) - actS(i)) <> actDur(i) Then
-                    AddMsg i, "日数（" & actDur(i) & "日）と開始～終了（" & (actF(i) - actS(i)) & "日）が合いません"
+        If IsDate(actStartIn(i)) Then
+            If IsHoliday(actS(i)) Then AddMsg i, "休工日（" & Format(CDate(actS(i)), "m/d") & "）に始まっています"
+        End If
+        If IsDate(actEndIn(i)) And actF(i) > actS(i) Then
+            e = actF(i) - 1
+            If IsHoliday(e) Then AddMsg i, "休工日（" & Format(CDate(e), "m/d") & "）に終わっています"
+        End If
+        If IsDate(actStartIn(i)) And IsDate(actEndIn(i)) And actDurKnown(i) Then
+            If actF(i) > actS(i) And actDur(i) > 0 Then
+                n = WorkDaysIn(actS(i), actF(i))
+                If n <> actDur(i) Then
+                    AddMsg i, "日数（" & actDur(i) & "日）と開始～終了の工事する日（" & n & "日）が合いません"
                 End If
             End If
         End If
@@ -842,12 +986,12 @@ Private Sub CollectGroups()
                 gZone(nGroup) = actZoneIdx(i)
                 gPurp(nGroup) = actPurpIdx(i)
                 gS(nGroup) = actS(i)
-                gF(nGroup) = actF(i)
+                gF(nGroup) = actFd(i)
             End If
             g = dict(key)
             actGroupIdx(i) = g
             If actS(i) < gS(g) Then gS(g) = actS(i)
-            If actF(i) > gF(g) Then gF(g) = actF(i)
+            If actFd(i) > gF(g) Then gF(g) = actFd(i)
             If actCrit(i) Then gCrit(g) = True
         End If
     Next i
@@ -949,7 +1093,7 @@ Private Sub WriteResults(ByVal ws As Worksheet)
 
     heads = Array("計算開始", "計算終了", "全余裕(日)", "クリティカル", "チェック", "先行作業の名前")
     hdr = FindHeaderRow(ws, "作業ID")
-    lastRow = ws.Cells(ws.Rows.Count, FindCol(ws, hdr, "作業ID")).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, FindCol(ws, hdr, "作業ID"))
     For k = 1 To 6
         cols(k) = EnsureCol(ws, hdr, CStr(heads(k - 1)))
         If lastRow > hdr Then ws.Range(ws.Cells(hdr + 1, cols(k)), ws.Cells(lastRow, cols(k))).ClearContents
@@ -1032,7 +1176,7 @@ Private Function DrawSheet(ByVal mode As Long) As String
                 itAct(nItem) = i
                 itKind(nItem) = KIND_ACT
                 itS(nItem) = actS(i)
-                itF(nItem) = actF(i)
+                itF(nItem) = actFd(i)
                 actItem(i) = nItem
             End If
         End If
@@ -1095,25 +1239,24 @@ Private Sub SetViewRange()
     viewEnd = maxF + 2
 
     ' 目盛り：「週」「日」「自動」（空欄も自動）。自動は期間が AUTO_DAY_SPAN 日までなら日単位。
-    ' 「日」でも期間が MAX_DAY_SPAN 日を超えるときは、列が多すぎて重くなるので週単位にする
+    ' 全体工程は「日」でも期間が MAX_DAY_SPAN 日を超えるときは、横に長くなりすぎるので週単位にする
+    ' （期のシート・詳細工程は「日」なら、長くても日単位のまま）
     If isOverall Then sv = GetSettingValue("全体の目盛り") Else sv = GetSettingValue("期ごとの目盛り")
     If Len(CellText(sv)) = 0 Then sv = GetSettingValue("目盛り")
     sc = CellText(sv)
+    weekScale = False
     If InStr(sc, "週") > 0 Then
-        daysPerCol = 7
+        weekScale = True
     ElseIf InStr(sc, "日") > 0 Then
-        daysPerCol = 1
-        If viewEnd - viewStart > MAX_DAY_SPAN Then
-            daysPerCol = 7
+        If isOverall And viewEnd - viewStart > MAX_DAY_SPAN Then
+            weekScale = True
             If Len(autoWeekNote) > 0 Then autoWeekNote = autoWeekNote & "・"
             autoWeekNote = autoWeekNote & "「" & curSheetName & "」"
         End If
     ElseIf AutoSpan() > AUTO_DAY_SPAN Then
-        daysPerCol = 7
-    Else
-        daysPerCol = 1
+        weekScale = True
     End If
-    If daysPerCol = 7 Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)
+    If weekScale Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)   ' 月曜から
 End Sub
 
 ' 目盛りが「自動」のときに見る期間。期のシートは、どの期も同じ目盛りになるよう一番長い期で決める
@@ -1137,7 +1280,7 @@ Private Sub AddGhosts()
     For k = 1 To n0
         a = itAct(k)
         For Each v In preds(a)
-            If actItem(v) = 0 Then g = GhostItem(KIND_FROM, CLng(v), ClampDay(actF(v)))
+            If actItem(v) = 0 Then g = GhostItem(KIND_FROM, CLng(v), ClampDay(actFd(v)))
         Next v
         For Each v In succs(a)
             If actItem(v) = 0 Then g = GhostItem(KIND_TO, CLng(v), ClampDay(actS(v)))
@@ -1188,19 +1331,19 @@ Private Sub BuildSheetLinks()
             For Each v In preds(a)
                 If actItem(v) > 0 Then
                     fromK = actItem(v)
-                    fa = actF(v)
+                    fa = actFd(v)
                 Else
                     fromK = ghostDict(KIND_FROM & "|" & v)
                     fa = itF(fromK)
                 End If
                 If fromK <> toK Then
-                    AddLink fromK, toK, fa, actS(a), (actCrit(v) And actCrit(a) And actF(v) = actS(a)), pairDict
+                    AddLink fromK, toK, fa, actS(a), (actCrit(v) And actCrit(a) And actFd(v) = actS(a)), pairDict
                 End If
             Next v
             For Each v In succs(a)
                 If actItem(v) = 0 Then
                     gk = ghostDict(KIND_TO & "|" & v)
-                    AddLink toK, gk, actF(a), itS(gk), (actCrit(a) And actCrit(v) And actF(a) = actS(v)), pairDict
+                    AddLink toK, gk, actFd(a), itS(gk), (actCrit(a) And actCrit(v) And actFd(a) = actS(v)), pairDict
                 End If
             Next v
         End If
@@ -1439,7 +1582,7 @@ Private Sub RegisterNodes()
             ' まとめの中で作業のない期間（待ち）の両端にも結合点を置く
             For i = 1 To nAct
                 If actGroupIdx(i) = itGroup(k) Then
-                    d = actF(i)
+                    d = actFd(i)
                     If d > itS(k) And d < itF(k) Then
                         If Not SegBusy(k, d, d + 1) Then n = NodeIndex(itLane(k), d, actCrit(i), False)
                     End If
@@ -1472,7 +1615,7 @@ Private Function SumEndCrit(ByVal k As Long, ByVal atStart As Boolean) As Boolea
             If atStart Then
                 If actS(i) = itS(k) Then SumEndCrit = True
             Else
-                If actF(i) = itF(k) Then SumEndCrit = True
+                If actFd(i) = itF(k) Then SumEndCrit = True
             End If
             If SumEndCrit Then Exit Function
         End If
@@ -1546,7 +1689,7 @@ Private Function SegCrit(ByVal k As Long, ByVal e1 As Long, ByVal e2 As Long) As
     g = itGroup(k)
     For i = 1 To nAct
         If actGroupIdx(i) = g And actCrit(i) Then
-            If actS(i) < e2 And actF(i) > e1 Then
+            If actS(i) < e2 And actFd(i) > e1 Then
                 SegCrit = True
                 Exit Function
             End If
@@ -1564,7 +1707,7 @@ Private Function SegBusy(ByVal k As Long, ByVal e1 As Long, ByVal e2 As Long) As
     g = itGroup(k)
     For i = 1 To nAct
         If actGroupIdx(i) = g Then
-            If actS(i) < e2 And actF(i) > e1 Then
+            If actS(i) < e2 And actFd(i) > e1 Then
                 SegBusy = True
                 Exit Function
             End If
@@ -1643,7 +1786,7 @@ Private Function SubLabel(ByVal k As Long) As String
             t = gCoLabel(g)
             If gF(g) > gS(g) Then
                 If Len(t) > 0 Then t = t & "・"
-                t = t & (gF(g) - gS(g)) & "日"
+                t = t & WorkDaysIn(gS(g), gF(g)) & "日"
             End If
             If gProg(g) > 0 And Not showProg Then
                 If Len(t) > 0 Then t = t & "・"
@@ -1653,7 +1796,7 @@ Private Function SubLabel(ByVal k As Long) As String
             t = actCo(a)
             If actF(a) > actS(a) Then
                 If Len(t) > 0 Then t = t & "・"
-                t = t & (actF(a) - actS(a)) & "日"
+                t = t & WorkDaysIn(actS(a), actF(a)) & "日"
             End If
             If actProg(a) > 0 And Not showProg Then
                 If Len(t) > 0 Then t = t & "・"
@@ -1721,9 +1864,12 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     rowWeekday = rowMonth + 2
     firstLaneRow = rowMonth + 3
 
-    nCols = (viewEnd - viewStart) \ daysPerCol + 1
-    If daysPerCol = 1 And nCols < MIN_DAY_COLS Then nCols = MIN_DAY_COLS
-    If daysPerCol = 7 And nCols < MIN_WEEK_COLS Then nCols = MIN_WEEK_COLS
+    nCols = viewEnd - viewStart + 1                 ' 日付の列は1日1列（週単位も）
+    If weekScale Then
+        nCols = WholeWeeks(MaxL(nCols, MIN_WEEK_COLS * 7))
+    ElseIf nCols < MIN_DAY_COLS Then
+        nCols = MIN_DAY_COLS
+    End If
 
     With wsC.Cells
         .Font.Name = "游ゴシック"
@@ -1741,19 +1887,24 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     wsC.Columns(labelCols).ColumnWidth = LABEL_COL_WIDTH
     dateCol = labelCols + 1
     SetDateColumns
-    dayW = wsC.Cells(1, dateCol).Width / daysPerCol      ' 1日分の幅（pt）
+    dayW = wsC.Cells(1, dateCol).Width                  ' 1日分の幅（pt）
 End Sub
 
 Private Sub SetDateColumns()
     wsC.Range(wsC.Columns(dateCol), wsC.Columns(dateCol + nCols - 1)).ColumnWidth = _
-        IIf(daysPerCol = 1, DAY_COL_WIDTH, WEEK_COL_WIDTH)
+        IIf(weekScale, WEEK_DAY_COL_WIDTH, DAY_COL_WIDTH)
     xCacheOK = False
 End Sub
+
+' 週単位のときは、日付の列の数を週の切れ目（7日ごと）にそろえる
+Private Function WholeWeeks(ByVal n As Long) As Long
+    If weekScale Then WholeWeeks = ((n + 6) \ 7) * 7 Else WholeWeeks = n
+End Function
 
 ' ラベルが右端からはみ出さないよう、必要なら日付の列を足す
 Private Sub FitColumns()
     Dim needCols As Long
-    needCols = Int(LayoutLabels() / daysPerCol) + 2
+    needCols = WholeWeeks(Int(LayoutLabels()) + 2)
     If needCols > nCols Then
         nCols = needCols
         SetDateColumns
@@ -1805,10 +1956,11 @@ End Function
 ' 表題・日付目盛り・網掛け（土日・休工日）・工事名
 Private Sub DrawGrid()
     Dim c As Long, d As Long, col As Long, lastCol As Long, lastLaneRow As Long
-    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean
+    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean, hasExtra As Boolean
     Dim bi As Long, b1 As Long, runEnd As Boolean
     Dim sv As Variant, txt As String, created As Variant
     Dim vMon() As Variant, vDay() As Variant, vWk() As Variant, clr As Long, runClr As Long, runCol As Long
+    Dim noWork As Boolean, runNoWork As Boolean
 
     lastCol = dateCol + nCols - 1
     lastLaneRow = firstLaneRow + nLane - 1
@@ -1826,17 +1978,20 @@ Private Sub DrawGrid()
     If usePurps Then wsC.Cells(rowDay, 1).Value = "目的"
     If useZones Then wsC.Cells(rowDay, zoneCol).Value = "工区"
     wsC.Cells(rowDay, labelCols).Value = "工事"
-    ' 日（週）の境目の罫線：薄い灰色の細線。結合点（○）はこの線の上に乗る（列ごとではなく、まとめて引く）
+    ' 日の境目の罫線：日単位は薄い灰色の細線、週単位は点線（週の境目は下で実線にする）。結合点（○）はこの線の上に乗る
+    ' （列ごとではなく、まとめて引く）
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(lastLaneRow, lastCol)).Borders(xlInsideVertical)
-        .LineStyle = xlContinuous
+        .LineStyle = IIf(weekScale, xlDot, xlContinuous)
         .Weight = xlThin
-        .Color = RGB(217, 217, 217)
+        .Color = IIf(weekScale, RGB(191, 191, 191), RGB(217, 217, 217))
     End With
-    ' 目盛りの文字は配列にためて1回で書き、網掛けは同じ色が続く列をまとめて塗る
+    ' 目盛りの文字は配列にためて1回で書き、網掛けは同じ塗り方が続く列をまとめて塗る
     ReDim vMon(1 To 1, 1 To nCols): ReDim vDay(1 To 1, 1 To nCols): ReDim vWk(1 To 1, 1 To nCols)
+    runCol = dateCol
     For c = 0 To nCols - 1
-        d = viewStart + c * daysPerCol
+        d = viewStart + c
         col = dateCol + c
+        wd = Weekday(CDate(d), vbSunday)
         If c = 0 Or Month(CDate(d)) <> prevMonth Then
             vMon(1, c + 1) = "'" & Format(CDate(d), "yyyy/m")
             If c > 0 Then       ' 月の境目の濃い線（最初の列の左は、あとでまとめて引く）
@@ -1846,40 +2001,51 @@ Private Sub DrawGrid()
                 End With
             End If
             prevMonth = Month(CDate(d))
+        ElseIf weekScale And wd = vbMonday Then        ' 週の境目（月曜の左）の実線
+            With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(lastLaneRow, col)).Borders(xlEdgeLeft)
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+                .Color = RGB(166, 166, 166)
+            End With
         End If
-        clr = 0
-        If daysPerCol = 1 Then
-            wd = Weekday(CDate(d), vbSunday)
+        clr = 0                                         ' 土曜は薄い青、日曜は薄い赤（日単位も週単位も）
+        If IsExtraWorkDay(d) Then                       ' 臨時の工事日（例外の日で ○）は薄い緑
+            clr = EXTRA_FILL
+            hasExtra = True
+        ElseIf wd = vbSaturday Then
+            clr = SAT_FILL
+        ElseIf wd = vbSunday Then
+            clr = SUN_FILL
+        End If
+        noWork = IsHoliday(d)                           ' 休工日は斜線
+        If noWork Then hasHol = True
+        If weekScale Then
+            If wd = vbMonday Then vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")   ' 週の初め（月曜）の日付
+        Else
             vDay(1, c + 1) = Day(CDate(d))
             vWk(1, c + 1) = Mid$("日月火水木金土", wd, 1)
-            If IsHoliday(d) Then
-                clr = RGB(252, 228, 214)
-                hasHol = True
-            ElseIf wd = vbSunday Or wd = vbSaturday Then
-                clr = RGB(242, 242, 242)
+            If wd = vbSunday Then
+                wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
+            ElseIf wd = vbSaturday Then
+                wsC.Cells(rowWeekday, col).Font.Color = RGB(0, 112, 192)
             End If
-            If wd = vbSunday Then wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
-        Else
-            vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")
         End If
-        If clr <> runClr Then
-            If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, col - 1)).Interior.Color = runClr
+        If clr <> runClr Or noWork <> runNoWork Then
+            PaintDays runCol, col - 1, runClr, runNoWork, lastLaneRow
             runCol = col
             runClr = clr
+            runNoWork = noWork
         End If
     Next c
-    If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, lastCol)).Interior.Color = runClr
+    PaintDays runCol, lastCol, runClr, runNoWork, lastLaneRow
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Value = vMon
     wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowDay, lastCol)).Value = vDay
-    If daysPerCol = 1 Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
+    If Not weekScale Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
     If showProg Then
-        If progT >= viewStart And progT < viewStart + nCols * daysPerCol Then
-            c = (progT - viewStart) \ daysPerCol
-            MarkStatusDay dateCol + c, viewStart + c * daysPerCol
-        End If
+        If progT >= viewStart And progT < viewStart + nCols Then MarkStatusDay dateCol + progT - viewStart
     End If
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowWeekday, lastCol))
-        .HorizontalAlignment = xlCenter
+        .HorizontalAlignment = IIf(weekScale, xlLeft, xlCenter)     ' 週単位の日付は月曜の列から右へはみ出して書く
         .Font.Size = 8
     End With
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Font.Size = 8
@@ -1898,14 +2064,10 @@ Private Sub DrawGrid()
     If Not IsDate(created) Then created = Date
     txt = ""
     If Len(CellText(sv)) > 0 Then txt = "第" & CellText(sv) & "版　"
-    txt = txt & "作成日：" & Format(created, "yyyy/mm/dd") & "　目盛り：" & IIf(daysPerCol = 1, "日", "週") & "単位"
-    If daysPerCol = 1 Then
-        If hasHol Then
-            txt = txt & "（網掛け：灰色＝土日、赤＝休工日）"
-        Else
-            txt = txt & "（網掛けは土日）"
-        End If
-    End If
+    txt = txt & "作成日：" & Format(created, "yyyy/mm/dd") & "　目盛り：" & IIf(weekScale, "週", "日") & "単位（"
+    If weekScale Then txt = txt & "月曜始まり。点線は日の区切り。"
+    txt = txt & "網掛け：青＝土、赤＝日" & IIf(hasExtra, "、緑＝臨時の工事日", "") & _
+          IIf(hasHol, "、斜線＝休工日", "") & "）"
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
 
@@ -1962,6 +2124,20 @@ Private Sub DrawGrid()
     End If
     If ghostFromFirst > 0 Then LabelGhostLanes ghostFromFirst, ghostFromLast, "他の期から", lastCol
     If ghostToFirst > 0 Then LabelGhostLanes ghostToFirst, ghostToLast, "他の期へ", lastCol
+End Sub
+
+' 日付の列 c1～c2 の網掛け：土・日の色（日付の行から下）と、休工日の斜線（段の行だけ）
+Private Sub PaintDays(ByVal c1 As Long, ByVal c2 As Long, ByVal clr As Long, ByVal noWork As Boolean, _
+                      ByVal lastRow As Long)
+    If c2 < c1 Then Exit Sub
+    If clr <> 0 Then wsC.Range(wsC.Cells(rowDay, c1), wsC.Cells(lastRow, c2)).Interior.Color = clr
+    If noWork Then
+        With wsC.Range(wsC.Cells(firstLaneRow, c1), wsC.Cells(lastRow, c2)).Interior
+            If clr = 0 Then .Color = RGB(255, 255, 255)
+            .Pattern = xlPatternLightUp
+            .PatternColor = HOL_HATCH
+        End With
+    End If
 End Sub
 
 ' 縦軸の工区・目的の欄：col 列の段 L1～L2 を結合して塗り、名前を書き、欄の下に境目の線を引く（col 列から右端まで）
@@ -2910,7 +3086,9 @@ Private Sub LegendChip(ByVal txt As String, ByVal clr As Long, ByRef x As Double
     x = x + w
 End Sub
 
-' 枠線を消し、見出しを固定し、A3横・横1ページで印刷できるようにする
+' 枠線を消し、見出しを固定し、印刷の設定をする
+'   A3横・余白0・すべての行を1ページに（横は何ページになってもよい）。どのページにも、左に目的・工区・工事の列、
+'   上に表題～日付の目盛りの行を付ける（タイトル列・タイトル行）。ページ番号は右上（表題の行の右は空いている）
 Private Sub FinishSheet()
     Dim lastCol As Long
 
@@ -2928,17 +3106,23 @@ Private Sub FinishSheet()
     Application.PrintCommunication = False
     With wsC.PageSetup
         .PrintArea = wsC.Range(wsC.Cells(1, 1), wsC.Cells(legendLastRow + 1, lastCol)).Address
+        .PrintTitleRows = wsC.Range(wsC.Rows(1), wsC.Rows(rowWeekday)).Address             ' 表題～日付の目盛り
+        .PrintTitleColumns = wsC.Range(wsC.Columns(1), wsC.Columns(labelCols)).Address   ' 目的・工区・工事
         .Orientation = xlLandscape
         .PaperSize = xlPaperA3
         .Zoom = False
-        .FitToPagesWide = 1
-        .FitToPagesTall = False
-        .CenterHorizontally = True
-        .LeftMargin = Application.CentimetersToPoints(1)
-        .RightMargin = Application.CentimetersToPoints(1)
-        .TopMargin = Application.CentimetersToPoints(1.2)
-        .BottomMargin = Application.CentimetersToPoints(1.2)
-        .CenterFooter = "&P / &N"
+        .FitToPagesWide = False         ' すべての行を1ページに印刷
+        .FitToPagesTall = 1
+        .CenterHorizontally = False
+        .LeftMargin = 0
+        .RightMargin = 0
+        .TopMargin = 0
+        .BottomMargin = 0
+        .HeaderMargin = Application.CentimetersToPoints(0.5)    ' ページ番号の位置（紙に印刷しても切れないように）
+        .FooterMargin = 0
+        .ScaleWithDocHeaderFooter = False                       ' 縮小してもページ番号は読める大きさのまま
+        .RightHeader = "&10&P / &N"                             ' ページ番号は右上（下は凡例と重なりやすい）
+        .CenterFooter = ""
     End With
     Application.PrintCommunication = True
     On Error GoTo 0
@@ -2948,17 +3132,15 @@ End Sub
 '==============================================================================
 '  図形を描く部品
 '==============================================================================
-' 日 d の左端の x 座標。日付の列はすべて同じ幅なので、最初の列の位置と幅を一度だけ読んで計算する
+' 日 d の左端の x 座標。日付の列は1日1列ですべて同じ幅なので、最初の列の位置と幅を一度だけ読んで計算する
 ' （毎回セルに問い合わせると、項目が多いときに遅い）
 Private Function XOf(ByVal d As Long) As Double
-    Dim off As Long
     If Not xCacheOK Then
         xLeft0 = wsC.Cells(rowDay, dateCol).Left
         xColW = wsC.Cells(rowDay, dateCol).Width
         xCacheOK = True
     End If
-    off = d - viewStart
-    XOf = xLeft0 + (off \ daysPerCol) * xColW + xColW * ((off Mod daysPerCol) / daysPerCol)
+    XOf = xLeft0 + (d - viewStart) * xColW
 End Function
 
 ' 段 L の矢線の y 座標（段の行の上端は、行の高さを決めたあとに一度だけ読む）
@@ -3192,15 +3374,32 @@ End Sub
 '==============================================================================
 '  休工日
 '==============================================================================
+' 休工日（工事しない日）か：例外の日に書いてあればそれ、なければ曜日の決まり
 Private Function IsHoliday(ByVal d As Long) As Boolean
+    Dim key As String
     If holDict Is Nothing Then Exit Function
-    IsHoliday = holDict.Exists(CStr(d))
+    key = CStr(d)
+    If holDict.Exists(key) Then
+        IsHoliday = holDict(key)
+    Else
+        IsHoliday = wdOff(Weekday(CDate(d), vbSunday))
+    End If
 End Function
 
-' d が休工日なら、休工日でない日まで進める
+' 臨時の工事日か：工事カレンダーの例外の日で、工事する日（○）にした日（休みの曜日・連休・祝日などに工事する日）
+Private Function IsExtraWorkDay(ByVal d As Long) As Boolean
+    Dim key As String
+    If holDict Is Nothing Then Exit Function
+    key = CStr(d)
+    If holDict.Exists(key) Then IsExtraWorkDay = Not holDict(key)
+End Function
+
+' d が休工日なら、休工日でない日まで進める（休みが長すぎるときは途中でやめる）
 Private Function NextWorkDay(ByVal d As Long) As Long
-    Do While IsHoliday(d)
+    Dim n As Long
+    Do While IsHoliday(d) And n < 4000
         d = d + 1
+        n = n + 1
     Loop
     NextWorkDay = d
 End Function
@@ -3209,7 +3408,7 @@ End Function
 Private Function AddWorkDays(ByVal s As Long, ByVal dur As Long) As Long
     Dim d As Long, cnt As Long
     d = s
-    Do While cnt < dur
+    Do While cnt < dur And d - s < dur + 4000
         If Not IsHoliday(d) Then cnt = cnt + 1
         d = d + 1
     Loop
@@ -3224,11 +3423,22 @@ Private Function StartFromEnd(ByVal e As Long, ByVal dur As Long) As Long
         Exit Function
     End If
     d = e + 1
-    Do While cnt < dur
+    Do While cnt < dur And e - d < dur + 4000
         d = d - 1
         If Not IsHoliday(d) Then cnt = cnt + 1
     Loop
     StartFromEnd = d
+End Function
+
+' f（終了日の翌日）より前で、休工日でない最後の日（s より前には戻らない）
+Private Function LastWorkDay(ByVal f As Long, ByVal s As Long) As Long
+    Dim d As Long
+    d = f - 1
+    Do While d > s And IsHoliday(d)
+        d = d - 1
+    Loop
+    If d < s Then d = s
+    LastWorkDay = d
 End Function
 
 
@@ -3365,6 +3575,17 @@ Private Function FindCol(ByVal ws As Worksheet, ByVal hdr As Long, ByVal key As 
             Exit Function
         End If
     Next c
+End Function
+
+' 工程データの最後の行（作業IDの列で値のある、いちばん下の行）。End(xlUp) はフィルターで隠れた行を飛ばすので、
+' 表がテーブルならテーブルの最後の行、シートで絞り込み中なら使っている範囲の最後の行とくらべて、大きいほうにする
+Private Function DataLastRow(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId As Long) As Long
+    Dim r As Long, lo As ListObject
+    r = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    Set lo = ws.Cells(hdr, cId).ListObject
+    If Not lo Is Nothing Then r = MaxL(r, lo.Range.Row + lo.Range.Rows.Count - 1)
+    If ws.FilterMode Then r = MaxL(r, ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1)
+    DataLastRow = MaxL(r, hdr)
 End Function
 
 Private Function EnsureCol(ByVal ws As Worksheet, ByVal hdr As Long, ByVal key As String) As Long
@@ -3610,7 +3831,7 @@ End Function
 ' 工程データで作業IDの行を探す（見つからなければ 0）
 Private Function FindActRow(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId As Long, ByVal id As String) As Long
     Dim r As Long, lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     For r = hdr + 1 To lastRow
         If NormalizeId(CellText(ws.Cells(r, cId).Value)) = id Then
             FindActRow = r
@@ -3641,7 +3862,7 @@ Private Function IsUpstream(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId 
     Dim cur As String, v As Variant
 
     Set dict = CreateObject("Scripting.Dictionary")
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     For r = hdr + 1 To lastRow
         cur = NormalizeId(CellText(ws.Cells(r, cId).Value))
         If Len(cur) > 0 And Not dict.Exists(cur) Then dict.Add cur, CellText(ws.Cells(r, cPred).Value)
@@ -3803,7 +4024,7 @@ Private Function ApplyMovedNodes(ByVal wsD As Worksheet, ByVal movedIds As Colle
     Dim ws As Worksheet, shp As Shape, parts() As String, ents() As String, e() As String
     Dim newS As Object, newF As Object, oldS As Object, oldF As Object, bad As Object
     Dim order As New Collection, okIds As New Collection, v As Variant
-    Dim day As Long, delta As Long, j As Long, nIgnored As Long, nOk As Long
+    Dim day As Long, delta As Long, j As Long, nIgnored As Long, nOk As Long, lastD As Long
     Dim s1 As Long, f1 As Long, s2 As Long, f2 As Long, id As String, msg As String, skipped As String
     Dim hdr As Long, cId As Long, cStart As Long, cEnd As Long, cDur As Long, r As Long
     Dim ans As VbMsgBoxResult
@@ -3867,7 +4088,7 @@ Private Function ApplyMovedNodes(ByVal wsD As Worksheet, ByVal movedIds As Colle
         id = CStr(v)
         s1 = oldS(id)
         f1 = oldF(id)
-        If newS.Exists(id) Then s2 = newS(id) Else s2 = s1
+        If newS.Exists(id) Then s2 = NextWorkDay(newS(id)) Else s2 = s1    ' 休工日に動かした始まりは次の工事する日
         If newF.Exists(id) Then f2 = newF(id) Else f2 = f1
         If bad.Exists(id) Then
             skipped = skipped & vbCrLf & "・" & id & "：シートによって動かした日が違います"
@@ -3914,8 +4135,14 @@ Private Function ApplyMovedNodes(ByVal wsD As Worksheet, ByVal movedIds As Colle
             s2 = newS(id)
             f2 = newF(id)
             WriteDate wsD.Cells(r, cStart), s2
-            If f2 > s2 Then WriteDate wsD.Cells(r, cEnd), f2 - 1 Else WriteDate wsD.Cells(r, cEnd), s2
-            wsD.Cells(r, cDur).Value = f2 - s2
+            If f2 > s2 Then
+                lastD = LastWorkDay(f2, s2)             ' 終わりは、休工日を除いた最後の工事する日
+                WriteDate wsD.Cells(r, cEnd), lastD
+                wsD.Cells(r, cDur).Value = WorkDaysIn(s2, lastD + 1)
+            Else
+                WriteDate wsD.Cells(r, cEnd), s2
+                wsD.Cells(r, cDur).Value = 0
+            End If
             movedIds.Add id
             movedApplied = movedApplied + 1
         End If
@@ -3929,7 +4156,7 @@ End Function
 Private Function PushSuccessors(ByVal wsD As Worksheet, ByVal movedIds As Collection) As Boolean
     Dim idx As Object, i As Long, k As Long, v As Variant, m As Long, mx As Long, d As Long, n As Long
     Dim s2() As Long, f2() As Long, isMoved() As Boolean, isChg() As Boolean, needW() As Boolean
-    Dim hasChg As Boolean, fixedS As Boolean, ns As Long, nf As Long, msg As String
+    Dim hasChg As Boolean, fixedS As Boolean, ns As Long, nf As Long, msg As String, w As Long
     Dim hdr As Long, cStart As Long, cEnd As Long, r As Long
 
     Set idx = CreateObject("Scripting.Dictionary")
@@ -3960,9 +4187,15 @@ Private Function PushSuccessors(ByVal wsD As Worksheet, ByVal movedIds As Collec
                 fixedS = IsDate(actStartIn(i)) Or (IsDate(actEndIn(i)) And actDurKnown(i))
                 If fixedS Then
                     If s2(i) < mx Then
-                        d = NextWorkDay(mx) - s2(i)
-                        s2(i) = s2(i) + d
-                        If IsDate(actEndIn(i)) Then f2(i) = f2(i) + d Else f2(i) = FinishFor(i, s2(i))
+                        w = WorkDaysIn(actS(i), actF(i))      ' 工事する日の数を変えずにずらす
+                        s2(i) = NextWorkDay(mx)
+                        If Not IsDate(actEndIn(i)) Then
+                            f2(i) = FinishFor(i, s2(i))
+                        ElseIf actF(i) > actS(i) Then
+                            f2(i) = AddWorkDays(s2(i), MaxL(w, 1))
+                        Else
+                            f2(i) = s2(i)
+                        End If
                         If f2(i) < s2(i) Then f2(i) = s2(i)
                         isChg(i) = True
                         needW(i) = True
@@ -4017,10 +4250,11 @@ Private Sub WriteDate(ByVal cell As Range, ByVal d As Long)
     cell.Value = CDate(d)
 End Sub
 
-' 「1/19～1/22（4日）」のような期間の表記（f は終了日の翌日）
+' 「1/19～1/22（4日）」のような期間の表記（f は終了日の翌日。日数は工事する日の数）
 Private Function SpanText(ByVal st As Long, ByVal f As Long) As String
     If f > st Then
-        SpanText = Format(CDate(st), "m/d") & "～" & Format(CDate(f - 1), "m/d") & "（" & (f - st) & "日）"
+        SpanText = Format(CDate(st), "m/d") & "～" & Format(CDate(LastWorkDay(f, st)), "m/d") & "（" & _
+                   WorkDaysIn(st, f) & "日）"
     Else
         SpanText = Format(CDate(st), "m/d") & "（0日）"
     End If
@@ -4326,10 +4560,11 @@ Private Sub WriteProgressCols(ByVal ws As Worksheet, ByVal hdr As Long, ByVal la
     ws.Range(ws.Cells(hdr + 1, c(4)), ws.Cells(lastRow, c(4))).NumberFormat = "[Red]0""日遅れ"";[Blue]0""日早い"";""－"""
 End Sub
 
-' 基準日の列（週単位ならその週）の目盛りに印を付ける
-Private Sub MarkStatusDay(ByVal col As Long, ByVal d As Long)
-    If progT < d Or progT >= d + daysPerCol Then Exit Sub
-    With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(rowWeekday, col))
+' 基準日の列の目盛りに印を付ける（週単位は、日付の行に月曜の日付を書くので、その下の行だけ）
+Private Sub MarkStatusDay(ByVal col As Long)
+    Dim r1 As Long
+    If weekScale Then r1 = rowWeekday Else r1 = rowDay
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(rowWeekday, col))
         .Interior.Color = PROG_COLOR
         .Font.Color = RGB(255, 255, 255)
         .Font.Bold = True
@@ -4351,7 +4586,7 @@ End Sub
 ' 凡例のイナズマ線（イナズマ線を描いたシートだけ）
 Private Sub LegendProgress(ByRef x As Double, ByVal y As Double)
     Dim txt As String
-    If progTb < viewStart Or progTb > viewStart + nCols * daysPerCol Then Exit Sub
+    If progTb < viewStart Or progTb > viewStart + nCols Then Exit Sub
     DrawZigzag x, y
     txt = "イナズマ線（" & DateMD(progT) & "の作業終了時点の進み・遅れ）"
     AddText x + 42, y, txt, 8, RGB(0, 0, 0), False, 2
@@ -4366,7 +4601,7 @@ Private Sub DrawProgressLine()
 
     If Not showProg Then Exit Sub
     lo = viewStart
-    hi = viewStart + nCols * daysPerCol
+    hi = viewStart + nCols
     If progTb < lo Or progTb > hi Then Exit Sub
     xT = XOfDay(progTb)
     Set fb = wsC.Shapes.BuildFreeform(msoEditingAuto, xT, wsC.Cells(firstLaneRow, 1).Top)

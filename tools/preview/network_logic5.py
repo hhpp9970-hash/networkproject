@@ -27,7 +27,10 @@ plt.rcParams["font.family"] = next((f for f in ["Noto Sans CJK JP", "Yu Gothic",
 NAME_FONT, SUB_FONT, GAP, LINE_PITCH = 8.0, 7.0, 2.0, 1.75
 INAZUMA = "#E6007E"  # イナズマ線（クリティカルパスの赤と見分ける）
 PURP_FILL, PURP_TXT, PURP_LINE = "#D9E1F2", "#1F3864", "#404040"  # 目的の欄の塗り・文字、目的の境目の線
+SAT_FILL, SUN_FILL, HOL_HATCH, SAT_TXT = "#DDEBF7", "#FCE4EC", "#A6A6A6", "#0070C0"  # 土・日の網掛け、休工日の斜線、土の文字
+EXTRA_FILL = "#C6EFCE"  # 臨時の工事日（例外の日で ○）
 DAY_W, LANE_H, ARROW_OFF, NODE_D = 24.0, 44.0, 24.0, 12.0
+WEEK_DAY_W = 6.75  # 週単位の目盛りの1日の幅（VBA は列幅 0.7＝9px）
 R = NODE_D / 2
 BASE = dt.date(2027, 1, 12)
 SAMPLE5 = [  # 目的, 工区, 工事, 期, まとめ, 作業ID, 作業名, 表示名, 会社, 日数, 先行作業
@@ -57,6 +60,7 @@ SAMPLE5 = [  # 目的, 工区, 工事, 期, まとめ, 作業ID, 作業名, 表�
 
 
 def make_acts(rows=SAMPLE5):
+    """先行作業と日数（工事する日の数）から開始・終了日を入れる。休工日は飛ばす（VBA の CalcDates と同じ置き方）"""
     fin, out = {}, [None] * len(rows)
     remaining = list(range(len(rows)))
     while remaining:
@@ -65,11 +69,12 @@ def make_acts(rows=SAMPLE5):
             pu, z, k, p, g, aid, nm, disp, co, d, pr = rows[i]
             ps = parse_preds(pr)
             if all(q in fin for q in ps):
-                s = max([fin[q] for q in ps], default=BASE.toordinal())
-                fin[aid] = s if d == 0 else s + d
+                s = v3.next_work(max([fin[q] for q in ps], default=BASE.toordinal()))
+                f = s if d == 0 else v3.add_work(s, d)
+                fin[aid] = f
                 out[i] = dict(purpose=pu, zone=z, kouji=k, phase=p, group=g, id=aid, name=nm, disp=disp, co=co, dur=d,
                               pred=pr,
-                              start=dt.date.fromordinal(s), end=dt.date.fromordinal(s if d == 0 else s + d - 1),
+                              start=dt.date.fromordinal(s), end=dt.date.fromordinal(s if d == 0 else f - 1),
                               prog=0.0)
                 remaining.remove(i)
                 moved = True
@@ -368,7 +373,8 @@ def layout_labels(acts, c, ph, gr, zn, sh, day_w=DAY_W):
 
 
 def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption, grid=True, button=False, marks=(),
-           prog=None):
+           prog=None, day_w=DAY_W, week=False):
+    """week：週単位の目盛り（1日1列の細い列。週の境目＝実線、日の境目＝点線、日付の行に月曜の日付）"""
     PURP_W = 84.0 if zn["puse"] else 0.0
     ZONE_W = 70.0 if zn["use"] else 0.0
     LABEL_W, X0 = PURP_W + ZONE_W + 110.0, 10.0
@@ -377,7 +383,11 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
     vs = sh["view_start"]
     icrit = sh["icrit"]
     order = sorted(range(len(items)), key=lambda k: (items[k]["s"], items[k]["f"]))
-    ncols = max(sh["view_end"] - vs + 1, 40, int(lay["right_days"]) + 2)
+    if week:  # 週単位は 18 週以上、週の切れ目までの列
+        ncols = max(sh["view_end"] - vs + 1, 18 * 7, int(lay["right_days"]) + 2)
+        ncols = (ncols + 6) // 7 * 7
+    else:
+        ncols = max(sh["view_end"] - vs + 1, 40, int(lay["right_days"]) + 2)
 
     levels = phase_levels(ph) if (sh["overall"] and ph["names"]) else {}
     nph_rows = max(levels.values()) if levels else 0
@@ -397,8 +407,8 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
         lane_top.append(lane_top[-1] + h)
     chart_bottom = lane_top[-1]
     legend_top = chart_bottom + 15
-    W = X0 + LABEL_W + ncols * DAY_W + 20
-    right = X0 + LABEL_W + ncols * DAY_W
+    W = X0 + LABEL_W + ncols * day_w + 20
+    right = X0 + LABEL_W + ncols * day_w
     date_left = X0 + LABEL_W
 
     co_rows, row_items, xx = [], [], date_left + 4 + 30
@@ -423,7 +433,7 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
     ax.axis("off")
 
     def X(d):
-        return date_left + (d - vs) * DAY_W
+        return date_left + (d - vs) * day_w
 
     renderer = fig.canvas.get_renderer()
 
@@ -455,24 +465,43 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
         return lane_top[L] + lay["arrow_off"][L]
 
     has_hol = any(is_hol(vs + k) for k in range(ncols))
+    has_extra = any(v3.is_extra_work(vs + k) for k in range(ncols))
     ax.text(X0, row_title + 13, f"{title}　ネットワーク工程表{caption}", fontsize=14, weight="bold", va="center")
-    sub_txt = "第1版　作成日：2026/11/05　目盛り：日単位（網掛け：灰色＝土日" + ("、赤＝休工日" if has_hol else "") + "）"
+    sub_txt = ("第1版　作成日：2026/11/05　目盛り：" + ("週単位（月曜始まり。点線は日の区切り。" if week else "日単位（") +
+               "網掛け：青＝土、赤＝日" + ("、緑＝臨時の工事日" if has_extra else "") +
+               ("、斜線＝休工日" if has_hol else "") + "）")
     ax.text(X0, row_sub + 8, sub_txt, fontsize=9, va="center", color="#333333")
     if prog:
         ax.text(X0 + pt_w(sub_txt, 9) + 9, row_sub + 8, prog["summary"], fontsize=9, va="center", color=INAZUMA,
                 weight="bold")
-    week = "日月火水木金土"
+    wdays = "日月火水木金土"
     prev_month = None
     for k in range(ncols):
         d = dt.date.fromordinal(vs + k)
         x = X(vs + k)
         wd = (d.weekday() + 1) % 7
+        fill = EXTRA_FILL if v3.is_extra_work(vs + k) else (SAT_FILL if wd == 6 else (SUN_FILL if wd == 0 else None))
+        if fill:
+            ax.add_patch(Rectangle((x, row_day), day_w, chart_bottom - row_day, facecolor=fill, edgecolor="none",
+                                   zorder=0))
         if is_hol(vs + k):
-            ax.add_patch(Rectangle((x, row_day), DAY_W, chart_bottom - row_day, facecolor=HOL_FILL,
-                                   edgecolor="none", zorder=0))
-        elif wd in (0, 6):
-            ax.add_patch(Rectangle((x, row_day), DAY_W, chart_bottom - row_day, facecolor="#F2F2F2",
-                                   edgecolor="none", zorder=0))
+            ax.add_patch(Rectangle((x, lanes_top), day_w, chart_bottom - lanes_top, facecolor=fill or "white",
+                                   edgecolor=HOL_HATCH, hatch="////", lw=0, zorder=0.05))
+        if week:  # 週単位：日の境目は点線、週の境目（月曜）は実線、月の境目は濃い線
+            if d.month != prev_month:
+                ax.text(x + 2, row_month + 8, f"{d.year}/{d.month}", fontsize=8, va="center")
+                if k > 0:
+                    ax.plot([x, x], [row_month, chart_bottom], color="#969696", lw=0.8, zorder=1)
+                prev_month = d.month
+            elif wd == 1:
+                ax.plot([x, x], [row_day, chart_bottom], color="#A6A6A6", lw=0.6, zorder=0.6)
+            elif k > 0:
+                ax.plot([x, x], [row_day, chart_bottom], color="#BFBFBF", lw=0.5, linestyle=(0, (1, 1.5)), zorder=0.6)
+            if wd == 1:
+                ax.text(x + 2, row_day + 7, f"{d.month}/{d.day}", fontsize=7, ha="left", va="center")
+            if bool(prog) and vs + k == prog["T"]:  # 基準日の印は曜日の行だけ
+                ax.add_patch(Rectangle((x, row_week), day_w, 14, facecolor=INAZUMA, edgecolor="none", zorder=0.7))
+            continue
         if grid:  # 日の境目の罫線（薄い灰色の細線）
             ax.plot([x, x], [row_day, chart_bottom], color="#D9D9D9", lw=0.5, zorder=0.6)
         if d.month != prev_month:
@@ -481,12 +510,13 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
             prev_month = d.month
         is_t = bool(prog) and vs + k == prog["T"]
         if is_t:  # 基準日の目盛りに印
-            ax.add_patch(Rectangle((x, row_day), DAY_W, row_week + 14 - row_day, facecolor=INAZUMA,
+            ax.add_patch(Rectangle((x, row_day), day_w, row_week + 14 - row_day, facecolor=INAZUMA,
                                    edgecolor="none", zorder=0.7))
-        ax.text(x + DAY_W / 2, row_day + 7, str(d.day), fontsize=7, ha="center", va="center",
+        ax.text(x + day_w / 2, row_day + 7, str(d.day), fontsize=7, ha="center", va="center",
                 color="white" if is_t else "black", weight="bold" if is_t else "normal")
-        ax.text(x + DAY_W / 2, row_week + 7, week[wd], fontsize=7, ha="center", va="center",
-                color="white" if is_t else (RED if wd == 0 else "#000000"), weight="bold" if is_t else "normal")
+        ax.text(x + day_w / 2, row_week + 7, wdays[wd], fontsize=7, ha="center", va="center",
+                color="white" if is_t else (RED if wd == 0 else (SAT_TXT if wd == 6 else "#000000")),
+                weight="bold" if is_t else "normal")
     ax.plot([X0, right], [lanes_top, lanes_top], color="#7F7F7F", lw=0.8)
     ax.plot([date_left, date_left], [row_month, chart_bottom], color="#7F7F7F", lw=0.8)
     if zn["puse"]:
@@ -730,7 +760,7 @@ def render(acts, c, ph, gr, zn, sh, lay, colors, co_order, path, title, caption,
     return num
 
 
-def overlaps(sh, lay):
+def overlaps(sh, lay, day_w=DAY_W):
     """同じ段で重なっているラベル（縦横とも）、矢線の中央から外れたラベル、積んだラベルの数"""
     items = sh["items"]
     bad = pushed = stacked = 0
@@ -754,7 +784,7 @@ def overlaps(sh, lay):
         it = items[k]
         if it["kind"] in (KIND_ACT, KIND_SUM):
             e1, e2 = sh["label_span"](it)
-            cx = ((e1 - sh["view_start"]) + (e2 - sh["view_start"])) / 2 * DAY_W
+            cx = ((e1 - sh["view_start"]) + (e2 - sh["view_start"])) / 2 * day_w
             for is_name in (True, False):
                 lines, left, w, off = lab[is_name]
                 if lines and abs(left + w / 2 - cx) > 0.01:
@@ -764,9 +794,11 @@ def overlaps(sh, lay):
 
 if __name__ == "__main__":
     outdir = sys.argv[1]
-    v3.HOL.update(d.toordinal() for d, _ in HOLIDAYS)
+    week = "--week" in sys.argv[2:]  # 週単位の目盛りで描く（ファイル名の末尾に _週）
+    dw, tail = (WEEK_DAY_W, "_週") if week else (DAY_W, "")
+    v3.set_calendar(v3.load_sample_calendar())  # 工事カレンダー（土曜は休み、例外の日）
     acts = make_acts()
-    c = compute(acts)
+    c = compute(acts, is_hol=v3.is_hol)
     ph = collect_phases(acts, c)
     zn = collect_zones(acts)
     gr = collect_groups(acts, c, zn)
@@ -777,13 +809,14 @@ if __name__ == "__main__":
         holder = {}
 
         def hook(pre):
-            holder["lay"] = layout_labels(acts, c, ph, gr, zn, pre)
+            holder["lay"] = layout_labels(acts, c, ph, gr, zn, pre, day_w=dw)
             return holder["lay"]["occ"]
 
-        sh = v4.build_sheet(acts, c, ph, gr, zn, mode, before_links=hook)
+        sh = v4.build_sheet(acts, c, ph, gr, zn, mode, day_w=dw, before_links=hook, week=week)
         lay = holder["lay"]
-        render(acts, c, ph, gr, zn, sh, lay, colors, co_order, f"{outdir}/preview5_{nm}.png", title, cap)
-        bad, pushed, stacked = overlaps(sh, lay)
+        render(acts, c, ph, gr, zn, sh, lay, colors, co_order, f"{outdir}/preview5_{nm}{tail}.png", title, cap,
+               day_w=dw, week=week)
+        bad, pushed, stacked = overlaps(sh, lay, dw)
         multi = {items_k: lab[True][0] for items_k, lab in lay["labels"].items() if len(lab[True][0]) > 1}
         print(f"{nm}: overlaps={bad} pushed={pushed} stacked={stacked} mid={[lay['mid'][k][0][0] for k in lay['mid']]} "
               f"lane_h={[round(h) for h in lay['lane_h']]}")

@@ -43,7 +43,8 @@ Attribute VB_Name = "NetworkSchedule"
 '  ‘å‚«‚ÈH’ö•\id‚³j
 '    Eì}’†‚ÍƒXƒe[ƒ^ƒXƒo[i‰æ–Ê‚Ì‚¢‚¿‚Î‚ñ‰ºj‚Éi‚İ‹ï‡‚ğo‚µ‚Ü‚·BEsc ƒL[‚Å’†~‚Å‚«‚Ü‚·
 '    E–Ú·‚è‚Ìu©“®vi‹ó—“‚à“¯‚¶j‚ÍAŠúŠÔ‚ª”¼”N‚Ü‚Å‚ÌƒV[ƒg‚Í“ú’PˆÊA‚»‚ê‚æ‚è’·‚¢ƒV[ƒg‚ÍT’PˆÊ‚É‚µ‚Ü‚·B
-'      u“úv‚É‚µ‚Ä‚¢‚Ä‚àAŠúŠÔ‚ª2”N‚ğ’´‚¦‚éƒV[ƒg‚ÍT’PˆÊ‚Å•`‚«‚Ü‚·i—ñ‚ª‘½‚·‚¬‚Äd‚­‚È‚é‚½‚ßj
+'      ‘S‘ÌH’ö‚Íu“úv‚É‚µ‚Ä‚¢‚Ä‚àAŠúŠÔ‚ª2”N‚ğ’´‚¦‚é‚ÆT’PˆÊ‚Å•`‚«‚Ü‚·i‰¡‚É’·‚­‚È‚è‚·‚¬‚Ä“Ç‚ß‚È‚¢‚½‚ßjB
+'      Šú‚²‚Æ‚ÌƒV[ƒg‚ÆuÚ×H’öv‚ÍAu“úv‚É‚·‚ê‚Î’·‚­‚Ä‚à“ú’PˆÊ‚Å•`‚«‚Ü‚·
 '    Eì}‚ªI‚í‚Á‚½‚çAƒV[ƒg‚²‚Æ‚É‚©‚©‚Á‚½ŠÔ‚Æ}Œ`‚Ì”‚ğ•\¦‚µ‚Ü‚·
 '
 '  c²
@@ -59,19 +60,30 @@ Attribute VB_Name = "NetworkSchedule"
 '      i‰ïĞE“ú”‚Í‰ºj‚ÉÏ‚İ‚Ü‚·B’i‚Ì‚‚³‚Íƒ‰ƒxƒ‹‚É‡‚í‚¹‚Ä‘‚â‚µ‚Ü‚·
 '    Eƒ}ƒCƒ‹ƒXƒg[ƒ“i“ú”0j‚ÍA›‚Ì‰¡i–îü‚Ì‚‚³j‚Éuì‹ÆID –¼‘Oi‰ïĞjv‚Æ1s‚Å‘‚«‚Ü‚·
 '
+'  H–ƒJƒŒƒ“ƒ_[iuH–ƒJƒŒƒ“ƒ_[vƒV[ƒgB–³‚¯‚ê‚Î‘O‚Ì”Å‚Ìu‹xH“úvƒV[ƒg‚ğ“Ç‚İ‚Ü‚·j
+'    E—j“ú‚²‚Æ‚ÌŒˆ‚Ü‚èFu—j“úv‚Ì•\‚ÉAŒ`“ú‚»‚ê‚¼‚ê ›iH–‚·‚éj‚© ~iH–‚µ‚È‚¢j‚ğ‘‚«‚Ü‚·
+'    E—áŠO‚Ì“úFuŠJn“úvuI—¹“úvuH–vu“à—ev‚Ì•\‚ÉA˜A‹xE—Õ‚Ì‹x‚İi~j‚âA‹x‚İ‚Ì—j“úE˜A‹xEj“ú‚È‚Ç‚É
+'      H–‚·‚é“úi›B—Õ‚ÌH–“új‚ğ‘‚«‚Ü‚·BI—¹“ú‚ª‹ó—“‚È‚ç1“ú‚¾‚¯BuH–v‚ª‹ó—“‚È‚ç‹x‚İB1“ú‚¾‚¯‚Ìw’è‚â’Z‚¢ŠúŠÔ‚ÍA
+'      ’·‚¢ŠúŠÔ‚æ‚è—Dæ‚µ‚Ü‚·i“¯‚¶’·‚³‚È‚ç‰º‚Ìs‚ª—Dæj
+'    EH–‚µ‚È‚¢“úi‹xH“új‚ÍAŠJnEI—¹‚ª‹ó—“‚Ìì‹Æ‚ğ©“®‚Å’u‚­‚Æ‚«‚ÆA“ú”iH–‚·‚é“ú‚Ì”jE—]—T“ú”‚ğ
+'      ”‚¦‚é‚Æ‚«‚É”ò‚Î‚µ‚Ü‚·
+'
 '  –Ú·‚è
-'    E“úiT’PˆÊ‚Ì‚Æ‚«‚ÍTj‚Ì‹«–Ú‚É”–‚¢cü‚ğˆø‚«‚Ü‚·BŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚è‚Ü‚·
-'      iü‚Ì‰E‚Ì“ú‚Én‚Ü‚èA¶‚Ì“ú‚ÉI‚í‚é“_j
+'    E“ú‚Ì‹«–Ú‚É”–‚¢cü‚ğˆø‚«‚Ü‚·BŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚è‚Ü‚·iü‚Ì‰E‚Ì“ú‚Én‚Ü‚èA¶‚Ì“ú‚ÉI‚í‚é“_j
+'    ET’PˆÊ‚Ì–Ú·‚è‚Å‚à—ñ‚Í1“ú‚¸‚Âi×‚¢—ñj‚ÅAT‚Ì‹«–ÚiŒ—jj‚ğÀüA“ú‚Ì‹«–Ú‚ğ“_ü‚É‚µ‚Ü‚·B
+'      “ú•t‚Ìs‚É‚ÍŒ—j‚Ì“ú•t‚ğ‘‚«‚Ü‚·B›‚ª‰½“ú‚É‚ ‚é‚©‚ÍAŒ—j‚Ìü‚©‚ç“_ü‚ğ”‚¦‚Ä“Ç‚İ‚Ü‚·
 '
 '  F‚Æ‹L†
 '    E–îü‚Æ•¶š‚Í‰ïĞ‚²‚Æ‚ÌF‚Å‚·Buİ’èv‚Ìu‰ïĞ‚ÌFv‚Ì•\‚ÅA‰ïĞ–¼‚Ì‰E‚ÌƒZƒ‹iB—ñj‚Ì
 '      “h‚è‚Â‚Ô‚µF‚ğg‚¢‚Ü‚·B•\‚É‚È‚¢‰ïĞ‚É‚Í©“®‚ÅF‚ğ•t‚¯‚Ü‚·
 '    EƒNƒŠƒeƒBƒJƒ‹ƒpƒX‚ÍA–îü‚Ì‰º‚ÌÔ‚¢‘ÑE‘¾üE‘¾šEÔ‚¢›‚Å¦‚µ‚Ü‚·
-'    Eu‹xH“úvƒV[ƒg‚Ì“ú‚ÍÔA“y“ú‚ÍŠDF‚Å–ÔŠ|‚¯‚µ‚Ü‚·
+'    E“y—j‚Í”–‚¢ÂA“ú—j‚Í”–‚¢Ô‚Å–ÔŠ|‚¯‚µA‹xH“úiH–‚µ‚È‚¢“új‚É‚ÍÎü‚ğˆø‚«‚Ü‚·B—Õ‚ÌH–“ú
+'      iH–ƒJƒŒƒ“ƒ_[‚Ì—áŠO‚Ì“ú‚Å › ‚É‚µ‚½“új‚Í”–‚¢—Î‚Å–ÔŠ|‚¯‚µ‚Ü‚·
 '
 '  ‘O’ñEŠÈ—ª‰»‚µ‚Ä‚¢‚é‚Æ‚±‚ë
-'    E“ú”‚Í—ï“ú‚Å”‚¦‚Ü‚·B‚½‚¾‚µu‹xH“úvƒV[ƒg‚Ì“ú‚Íì‹Æ‚µ‚È‚¢“ú‚Æ‚µ‚Äˆµ‚¢A
-'      ŠJnEI—¹‚ª‹ó—“‚Ìì‹Æ‚ğ©“®‚Å’u‚­‚Æ‚«‚Í”ò‚Î‚µ‚Ü‚·
+'    E“ú”E—]—T“ú”‚ÍAH–‚·‚é“ú‚Ì”‚Å”‚¦‚Ü‚·i‹xH“ú‚Í”‚¦‚Ü‚¹‚ñj
+'    Eì‹Æ‚ªI‚í‚Á‚½‚ ‚Æ‚É‹xH“ú‚ª‘±‚­‚Æ‚«‚ÍA–îü‚ğŸ‚ÌH–‚·‚é“ú‚Ì“ª‚Ü‚ÅL‚Î‚µ‚Ä•`‚«‚Ü‚·
+'      i‹xH“ú‚ğ‚Í‚³‚ñ‚Å‘±‚­ì‹Æ‚ÆŒ‹‡“_‚ğ‹¤—L‚µA—]—T‚ÉŒ©‚¦‚È‚¢‚æ‚¤‚É‚·‚é‚½‚ßj
 '    Eæsì‹Æ‚Íuæsì‹Æ‚ªI‚í‚Á‚Ä‚©‚çŠJn‚·‚évŠÖŒW‚Æ‚µ‚Äˆµ‚¢‚Ü‚·
 '    E“ú”‚ª0‚Ìì‹Æ‚Íƒ}ƒCƒ‹ƒXƒg[ƒ“iŒ‹‡“_‚¾‚¯j‚Æ‚µ‚Ä•`‚«‚Ü‚·
 '    E“¯‚¶H–‚Ì’†‚ÅŠúŠÔ‚ªd‚È‚éì‹Æ‚ÍA’i‚ğ•ª‚¯‚Ä•`‚«‚Ü‚·
@@ -89,7 +101,8 @@ Option Explicit
 ' ---- ƒV[ƒg–¼‚È‚Ç ----
 Private Const DATA_SHEET As String = "H’öƒf[ƒ^"
 Private Const SETTING_SHEET As String = "İ’è"
-Private Const HOLIDAY_SHEET As String = "‹xH“ú"
+Private Const CALENDAR_SHEET As String = "H–ƒJƒŒƒ“ƒ_["   ' —j“ú‚²‚Æ‚ÌŒˆ‚Ü‚è‚Æ—áŠO‚Ì“úi‹xH“úEH–‚·‚é“új
+Private Const HOLIDAY_SHEET As String = "‹xH“ú"            ' ‘O‚Ì”Å‚ÌƒV[ƒgiH–ƒJƒŒƒ“ƒ_[‚ª–³‚¢‚Æ‚«‚É“Ç‚Şj
 Private Const OVERALL_SHEET As String = "‘S‘ÌH’ö"
 Private Const DETAIL_SHEET As String = "Ú×H’ö"
 Private Const COMMON_ZONE As String = "‹¤’Ê"         ' H‹æi–Ú“Ij‚ª‹ó—“‚Ìì‹Æ‚ğ‚Ü‚Æ‚ß‚é–¼‘O
@@ -103,14 +116,14 @@ Private Const NODE_TAG As String = "NWNODE"          ' “®‚©‚¹‚é›‚Ì–Úˆói‘ã‘Öƒeƒ
 ' ---- ƒŒƒCƒAƒEƒg ----
 Private Const LABEL_COL_WIDTH As Double = 16    ' H––¼‚Ì—ñ‚Ì•
 Private Const DAY_COL_WIDTH As Double = 3.4     ' “ú’PˆÊ‚Ì‚Æ‚«‚Ì1“ú•ª‚Ì—ñ•
-Private Const WEEK_COL_WIDTH As Double = 7      ' T’PˆÊ‚Ì‚Æ‚«‚Ì1T•ª‚Ì—ñ•
+Private Const WEEK_DAY_COL_WIDTH As Double = 0.7 ' T’PˆÊ‚Ì‚Æ‚«‚Ì1“ú•ª‚Ì—ñ•i1T‚Å‚¨‚æ‚»7•¶š•ªj
 Private Const ZONE_COL_WIDTH As Double = 10     ' H‹æ–¼‚Ì—ñ‚Ì•iH‹æ‚ª‚ ‚é‚Æ‚«j
 Private Const PURP_COL_WIDTH As Double = 12     ' –Ú“I‚Ì—ñiA—ñj‚Ì•i–Ú“I‚ª‚ ‚é‚Æ‚«j
 Private Const LANE_HEIGHT As Double = 44        ' 1’i‚Ì‚‚³iptj
 Private Const ARROW_OFFSET As Double = 24       ' ’i‚Ìã’[‚©‚ç–îü‚Ü‚Å‚Ì‹——£iptj
 Private Const NODE_D As Double = 12             ' Œ‹‡“_i›j‚Ì’¼Œaiptj
 Private Const MIN_DAY_COLS As Long = 40         ' “ú’PˆÊ‚ÌÅ¬—ñ”i–}—á‚ªû‚Ü‚é•j
-Private Const MIN_WEEK_COLS As Long = 18        ' T’PˆÊ‚ÌÅ¬—ñ”
+Private Const MIN_WEEK_COLS As Long = 18        ' T’PˆÊ‚ÌÅ¬‚ÌT”
 Private Const AUTO_DAY_SPAN As Long = 184       ' –Ú·‚è‚ªu©“®v‚Ì‚Æ‚«A“ú’PˆÊ‚É‚·‚éŠúŠÔ‚ÌãŒÀi“új
 Private Const MAX_DAY_SPAN As Long = 731        ' u“úv‚É‚µ‚Ä‚¢‚Ä‚àA‚±‚ê‚æ‚è’·‚¢ŠúŠÔ‚ÍT’PˆÊ‚É‚·‚éi“új
 Private Const NAME_FONT As Double = 8           ' –îü‚Ìãiì‹ÆIDEì‹Æ–¼j‚Ì•¶šƒTƒCƒY
@@ -138,6 +151,7 @@ Private actId() As String, actName() As String, actDisp() As String, actCo() As 
 Private actDur() As Long, actDurKnown() As Boolean, actPredText() As String
 Private actStartIn() As Variant, actEndIn() As Variant, actProg() As Double, actRow() As Long
 Private actS() As Long          ' ŠJn“úi“ú•t‚ÌƒVƒŠƒAƒ‹’lj
+Private actFd() As Long         ' –îü‚ÌI“_iI—¹“ú‚Ì—‚“úB‹xH“ú‚ª‘±‚­‚Æ‚«‚ÍŸ‚ÌH–‚·‚é“új
 Private actF() As Long          ' I—¹“ú‚Ì—‚“úiƒVƒŠƒAƒ‹’lj–îü‚ÌI“_‚ÌˆÊ’u
 Private actTF() As Long         ' ‘S—]—Ti“új
 Private actCrit() As Boolean    ' ƒNƒŠƒeƒBƒJƒ‹ƒpƒXã‚Ìì‹Æ‚©
@@ -163,7 +177,8 @@ Private gCoLabel() As String, gCoName() As String, gProg() As Double
 
 ' ---- ‰ïĞ‚ÌFE‹xH“ú ----
 Private coDict As Object, nCo As Long, coOrder() As String
-Private holDict As Object
+Private holDict As Object       ' —áŠO‚Ì“ú ¨ Truei‹x‚İj^FalseiH–‚·‚éj
+Private wdOff(1 To 7) As Boolean    ' H–‚µ‚È‚¢—j“úiWeekday ‚Ì 1“ú c 7“yj
 
 ' ---- 1–‡‚ÌƒV[ƒg‚É•`‚­‚à‚ÌiƒV[ƒg‚²‚Æ‚Éì‚è’¼‚·j ----
 Private nItem As Long
@@ -190,7 +205,8 @@ Private sdFrom() As Long, sdTo() As Long, sdSlot() As Long
 ' ---- •`‰æ ----
 Private wsC As Worksheet
 Private sheetMode As Long, isOverall As Boolean, useSummary As Boolean, sheetCaption As String
-Private viewStart As Long, viewEnd As Long, nCols As Long, daysPerCol As Long, dayW As Double
+Private viewStart As Long, viewEnd As Long, nCols As Long, dayW As Double
+Private weekScale As Boolean    ' T’PˆÊ‚Ì–Ú·‚èi—ñ‚Í1“ú‚¸‚Â‚Ì‚Ü‚Ü×‚­‚µAT‚Ì‹«–Ú‚ğÀüE“ú‚Ì‹«–Ú‚ğ“_ü‚É‚·‚éj
 Private labelCols As Long, dateCol As Long      ' c²‚Ì—ñ”i–Ú“IEH‹æEH–‚Ì‚¤‚¿g‚¤‚à‚Ìj‚ÆA“ú•t–Ú·‚è‚ÌŠJn—ñ
 Private zoneCol As Long                         ' H‹æ‚Ì—ñiH‹æ‚ª–³‚¯‚ê‚Î 0jB–Ú“I‚ª‚ ‚ê‚Î A—ñAH–‚Í labelCols —ñ
 Private nPhaseRows As Long, rowMonth As Long, rowDay As Long, rowWeekday As Long, firstLaneRow As Long
@@ -203,6 +219,10 @@ Private pickId As String, pickSheet As String, pickX As Double, pickY As Double,
 Private calcBaseDay As Long, movedApplied As Long, pushedCount As Long
 ' ---- ÀÑ‚Æ’x‚êiƒCƒiƒYƒ}üjv8 ----
 Private Const PROG_COLOR As Long = 8257766          ' ƒCƒiƒYƒ}ü‚ÌF RGB(230, 0, 126)
+Private Const SAT_FILL As Long = 16247773           ' “y—j‚Ì–ÔŠ|‚¯ RGB(221, 235, 247)
+Private Const SUN_FILL As Long = 15525116           ' “ú—j‚Ì–ÔŠ|‚¯ RGB(252, 228, 236)
+Private Const EXTRA_FILL As Long = 13561798         ' —Õ‚ÌH–“úi—áŠO‚Ì“ú‚Å ›j‚Ì–ÔŠ|‚¯ RGB(198, 239, 206)
+Private Const HOL_HATCH As Long = 10921638          ' ‹xH“ú‚ÌÎü‚ÌF RGB(166, 166, 166)
 Private actAS() As Variant, actAE() As Variant      ' ÀÑŠJnEÀÑI—¹i“ü—Í‚Ì‚Ü‚Üj
 Private useProg As Boolean, showProg As Boolean, progT As Long, progTb As Long
 Private prgState() As Long, prgP() As Double, prgDelay() As Double, prgPlan() As Double, prgWd() As Long
@@ -262,10 +282,10 @@ Public Sub DrawNetworkSchedule()
     movedApplied = 0
     pushedCount = 0
     Set movedIds = New Collection
+    LoadHolidays        ' H–ƒJƒŒƒ“ƒ_[i“®‚©‚µ‚½›‚ğ“ú•t‚É‚·‚é‚Æ‚«‚É‚àg‚¤j
     If Not ApplyMovedNodes(wsD, movedIds) Then GoTo CleanUp
 
     If Not LoadData(wsD) Then GoTo CleanUp
-    LoadHolidays
     BuildLinks
     If Not SortByLinks() Then GoTo CleanUp
     CalcDates
@@ -273,13 +293,13 @@ Public Sub DrawNetworkSchedule()
         ' Œã‚É‘±‚­ì‹Æ‚ğŒã‚ë‚Ö‚¸‚ç‚µ‚½‚çAH’öƒf[ƒ^‚ğ“Ç‚İ’¼‚µ‚ÄŒvZ‚µ’¼‚·
         If PushSuccessors(wsD, movedIds) Then
             If Not LoadData(wsD) Then GoTo CleanUp
-            LoadHolidays
             BuildLinks
             If Not SortByLinks() Then GoTo CleanUp
             CalcDates
         End If
     End If
     CalcFloat
+    CalcDrawEnds
     CheckLogic
     CheckDates
     CollectPhases
@@ -465,7 +485,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
         Exit Function
     End If
 
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     nAct = 0
     For r = hdr + 1 To lastRow
         If Len(CellText(ws.Cells(r, cId).Value)) > 0 Then nAct = nAct + 1
@@ -525,26 +545,139 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     LoadData = True
 End Function
 
-' u‹xH“úvƒV[ƒg‚ÌA—ñ‚Ì“ú•t‚ğ“Ç‚ŞiƒV[ƒg‚ª–³‚¯‚ê‚Î‹xH“ú‚È‚µj
+' H–ƒJƒŒƒ“ƒ_[‚ğ“Ç‚ŞiƒV[ƒg‚ª–³‚¯‚ê‚ÎA‚Ç‚Ì“ú‚àH–‚·‚é“új
+'   E—j“ú‚²‚Æ‚ÌŒˆ‚Ü‚èFu—j“úv‚Æ‘‚¢‚½ƒZƒ‹‚Ì‰º‚É Œ`“úA‚»‚Ì‰E‚ÌƒZƒ‹‚É ›iH–‚·‚éj‚© ~iH–‚µ‚È‚¢j
+'   E—áŠO‚Ì“úFŒ©o‚µuŠJn“úvi‘O‚Ì”Å‚Ìu‹xH“úvƒV[ƒg‚Íu“ú•tvj‚Ì—ñ‚É“ú•tBuI—¹“úv‚Ì—ñ‚É“ú•t‚ª‚ ‚ê‚ÎŠúŠÔB
+'     uH–v‚Ì—ñ‚ª › ‚È‚çH–‚·‚é“úA~ ‚©‹ó—“‚È‚ç‹x‚İBŠúŠÔ‚Ì’·‚¢s‚©‚ç“–‚Ä‚Í‚ß‚é‚Ì‚ÅA1“ú‚¾‚¯‚Ìw’è‚â’Z‚¢ŠúŠÔ‚ª
+'     —Dæi“¯‚¶’·‚³‚È‚ç‰º‚Ìs‚ª—DæjB˜A‹x‚Ì’†‚ÌH–“ú‚ÍA˜A‹x‚Ìs‚Æ‡”Ô‚ÉŠÖŒW‚È‚­ › ‚É‚Å‚«‚é
+'   EŒ©o‚µ‚ª–³‚¯‚ê‚ÎAA—ñ‚Ì“ú•t‚ğ‚·‚×‚Ä‹x‚İ‚Æ‚µ‚Ä“Ç‚Şi‘O‚Ì”Å‚Ìu‹xH“úvƒV[ƒgj
 Private Sub LoadHolidays()
-    Dim ws As Worksheet, r As Long, lastRow As Long, v As Variant, key As String
+    Dim ws As Worksheet, r As Long, k As Long, wr As Long, wc As Long, lastRow As Long, hdr As Long
+    Dim cS As Long, cE As Long, cW As Long, d As Long, d1 As Long, d2 As Long, noWork As Boolean, v As Variant
+    Dim ex1() As Long, ex2() As Long, exOff() As Boolean, exOrd() As Long, nEx As Long, j As Long, m As Long
 
     Set holDict = CreateObject("Scripting.Dictionary")
+    For k = 1 To 7
+        wdOff(k) = False
+    Next k
     On Error Resume Next
-    Set ws = ThisWorkbook.Worksheets(HOLIDAY_SHEET)
+    Set ws = ThisWorkbook.Worksheets(CALENDAR_SHEET)
+    If ws Is Nothing Then Set ws = ThisWorkbook.Worksheets(HOLIDAY_SHEET)
     On Error GoTo 0
     If ws Is Nothing Then Exit Sub
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
-    For r = 1 To lastRow
-        v = ws.Cells(r, 1).Value
+
+    ' —j“ú‚²‚Æ‚ÌŒˆ‚Ü‚è
+    If FindCell(ws, "—j“ú", wr, wc) Then
+        For r = wr + 1 To wr + 7
+            v = Left$(CellText(ws.Cells(r, wc).Value), 1)
+            k = 0
+            If Len(v) > 0 Then k = InStr("“úŒ‰Î…–Ø‹à“y", v)    ' ‹ó—“‚Í InStr ‚ª 1 ‚ğ•Ô‚·‚Ì‚Åœ‚­
+            If k > 0 Then wdOff(k) = Not IsWorkMark(CellText(ws.Cells(r, wc + 1).Value), True)
+        Next r
+        For k = 1 To 7
+            If Not wdOff(k) Then Exit For
+        Next k
+        If k > 7 Then       ' ‚·‚×‚Ä‚Ì—j“ú‚ª‹x‚İ‚¾‚ÆAì‹Æ‚ğ’u‚¯‚é“ú‚ª‚È‚¢
+            For k = 1 To 7
+                wdOff(k) = False
+            Next k
+            MsgBox "u" & ws.Name & "v‚ÅA‚·‚×‚Ä‚Ì—j“ú‚ª ~ ‚É‚È‚Á‚Ä‚¢‚Ü‚·B—j“ú‚ÌŒˆ‚Ü‚è‚Íg‚í‚¸‚Éì}‚µ‚Ü‚·B", _
+                   vbExclamation
+        End If
+    End If
+
+    ' —áŠO‚Ì“úi1“úA‚Ü‚½‚ÍŠJn“ú`I—¹“új
+    hdr = FindHeaderRow(ws, "ŠJn“ú")
+    If hdr > 0 Then
+        cS = FindCol(ws, hdr, "ŠJn“ú")
+    Else
+        hdr = FindHeaderRow(ws, "“ú•t")
+        If hdr > 0 Then cS = FindCol(ws, hdr, "“ú•t") Else cS = 1
+    End If
+    If hdr > 0 Then
+        cE = FindCol(ws, hdr, "I—¹“ú")
+        cW = FindCol(ws, hdr, "H–")       ' —j“ú‚Ì•\‚ÌuH–v‚æ‚è¶‚É‚ ‚é‚à‚Ìi—áŠO‚Ì•\‚Ì—ñj
+    End If
+    lastRow = ws.Cells(ws.Rows.Count, cS).End(xlUp).Row
+    If lastRow > hdr Then
+        ReDim ex1(1 To lastRow - hdr): ReDim ex2(1 To lastRow - hdr)
+        ReDim exOff(1 To lastRow - hdr): ReDim exOrd(1 To lastRow - hdr)
+    End If
+    For r = hdr + 1 To lastRow
+        v = ws.Cells(r, cS).Value
         If Not IsError(v) Then
             If IsDate(v) Then
-                key = CStr(DaySerial(v))
-                If Not holDict.Exists(key) Then holDict.Add key, True
+                d1 = DaySerial(v)
+                d2 = d1
+                If cE > 0 Then
+                    v = ws.Cells(r, cE).Value
+                    If Not IsError(v) Then
+                        If IsDate(v) Then d2 = DaySerial(v)
+                    End If
+                End If
+                If d2 < d1 Then
+                    d = d1
+                    d1 = d2
+                    d2 = d
+                End If
+                If d2 - d1 > 3660 Then d2 = d1 + 3660       ' ‘‚«ŠÔˆá‚¢‚Å’·‚·‚¬‚éŠúŠÔ‚Í10”N‚Ü‚Å
+                noWork = True
+                If cW > 0 Then noWork = Not IsWorkMark(CellText(ws.Cells(r, cW).Value), False)
+                nEx = nEx + 1
+                ex1(nEx) = d1
+                ex2(nEx) = d2
+                exOff(nEx) = noWork
+                m = nEx                                     ' ŠúŠÔ‚Ì’·‚¢‡‚É•À‚×‚éi“¯‚¶’·‚³‚Í‘‚¢‚½‡‚Ì‚Ü‚Üj
+                Do While m > 1
+                    If ex2(exOrd(m - 1)) - ex1(exOrd(m - 1)) < d2 - d1 Then
+                        exOrd(m) = exOrd(m - 1)
+                        m = m - 1
+                    Else
+                        Exit Do
+                    End If
+                Loop
+                exOrd(m) = nEx
             End If
         End If
     Next r
+
+    ' ’·‚¢ŠúŠÔ‚©‚ç“–‚Ä‚Í‚ß‚éi‚ ‚Æ‚Ìs‚ªã‘‚«‚·‚éj
+    For j = 1 To nEx
+        k = exOrd(j)
+        For d = ex1(k) To ex2(k)
+            holDict(CStr(d)) = exOff(k)
+        Next d
+    Next j
 End Sub
+
+' ›~‚Ì—“‚Ì“Ç‚İ•ûF~E‹xE‚È‚¢i‚µ‚È‚¢^‚Å‚«‚È‚¢jE•s‰ÂEx ¨ H–‚µ‚È‚¢A›EüEZE‰ÂE‚·‚éE‚Å‚«‚éEoEo ¨ H–‚·‚éA
+' ‚»‚êˆÈŠOi‹ó—“‚È‚Çj¨ dflt
+Private Function IsWorkMark(ByVal t As String, ByVal dflt As Boolean) As Boolean
+    t = Trim$(t)
+    IsWorkMark = dflt
+    If Len(t) = 0 Then Exit Function
+    If InStr(t, "~") > 0 Or InStr(t, "‹x") > 0 Or InStr(t, "‚È‚¢") > 0 Or InStr(t, "•s‰Â") > 0 Or LCase$(t) = "x" Then
+        IsWorkMark = False
+    ElseIf InStr(t, "›") > 0 Or InStr(t, "ü") > 0 Or InStr(t, "Z") > 0 Or InStr(t, "‰Â") > 0 Or _
+           InStr(t, "‚·‚é") > 0 Or InStr(t, "‚Å‚«‚é") > 0 Or InStr(t, "o") > 0 Or LCase$(t) = "o" Then
+        IsWorkMark = True
+    End If
+End Function
+
+' ƒV[ƒg‚Ì¶ãi30s~30—ñj‚©‚çA•¶š‚ª‚¿‚å‚¤‚Ç txt ‚ÌƒZƒ‹‚ğ’T‚·
+Private Function FindCell(ByVal ws As Worksheet, ByVal txt As String, ByRef fr As Long, ByRef fc As Long) As Boolean
+    Dim r As Long, c As Long
+    For r = 1 To 30
+        For c = 1 To 30
+            If CellText(ws.Cells(r, c).Value) = txt Then
+                fr = r
+                fc = c
+                FindCell = True
+                Exit Function
+            End If
+        Next c
+    Next r
+End Function
 
 ' æsì‹Æ‚Ì•¶š—ñ‚ğAì‹Æ‚Ì“Yš‚Ì‚Â‚È‚ª‚è‚É’¼‚·
 Private Sub BuildLinks()
@@ -663,9 +796,9 @@ Private Sub CalcDates()
     Next k
 End Sub
 
-' ‘S—]—T‚ÆƒNƒŠƒeƒBƒJƒ‹ƒpƒXiŒã‚ë‚©‚çŒvZj
+' ‘S—]—T‚ÆƒNƒŠƒeƒBƒJƒ‹ƒpƒXiŒã‚ë‚©‚çŒvZjB—]—T‚ÍH–‚·‚é“ú‚Ì”‚Å”‚¦‚éi‹xH“ú‚ğ‚Í‚³‚ñ‚Å‚à—]—T‚É‚µ‚È‚¢j
 Private Sub CalcFloat()
-    Dim k As Long, i As Long, pe As Long, lf As Long, ls As Long, v As Variant
+    Dim k As Long, i As Long, pe As Long, lf As Long, ls As Long, v As Variant, w As Long
     Dim lateF() As Long
 
     ReDim lateF(1 To nAct)
@@ -680,14 +813,26 @@ Private Sub CalcFloat()
         Else
             lf = 2147483647
             For Each v In succs(i)
-                ls = lateF(v) - (actF(v) - actS(v))
+                ' Œã‚Ìì‹Æ‚ÌÅ‚à’x‚¢ŠJnF‚»‚ÌÅ‚à’x‚¢I‚í‚è‚©‚çAH–‚·‚é“ú‚Ì”‚¾‚¯‚³‚©‚Ì‚Ú‚é
+                w = WorkDaysIn(actS(v), actF(v))
+                If w > 0 Then ls = StartFromEnd(lateF(v) - 1, w) Else ls = lateF(v)
                 If ls < lf Then lf = ls
             Next v
         End If
         lateF(i) = lf
-        actTF(i) = lf - actF(i)
+        If lf >= actF(i) Then actTF(i) = WorkDaysIn(actF(i), lf) Else actTF(i) = lf - actF(i)
         actCrit(i) = (actTF(i) <= 0)
     Next k
+End Sub
+
+' –îü‚ÌI“_FI—¹“ú‚Ì—‚“ú‚©‚ç‹xH“ú‚ª‘±‚­‚Æ‚«‚ÍAŸ‚ÌH–‚·‚é“ú‚Ì“ª‚Ü‚ÅL‚Î‚·
+' i‹xH“ú‚ğ‚Í‚³‚ñ‚Å‘±‚­ì‹Æ‚ÆŒ‹‡“_‚ğ‹¤—L‚·‚é‚½‚ßBƒ}ƒCƒ‹ƒXƒg[ƒ“‚Í‚»‚Ì‚Ü‚Üj
+Private Sub CalcDrawEnds()
+    Dim i As Long
+    ReDim actFd(1 To nAct)
+    For i = 1 To nAct
+        If actF(i) > actS(i) Then actFd(i) = NextWorkDay(actF(i)) Else actFd(i) = actF(i)
+    Next i
 End Sub
 
 ' æsì‹Æ‚ÌI—¹‘O‚Én‚Ü‚Á‚Ä‚¢‚éì‹Æ‚ğw“E‚·‚é
@@ -700,25 +845,24 @@ Private Sub CheckLogic()
     Next i
 End Sub
 
-' “ú•t‚Ìƒ`ƒFƒbƒNiŠJnEI—¹‚ª“ü—Í‚³‚ê‚Ä‚¢‚éì‹Æ‚¾‚¯j
-'   E‹xH“ú‚É‚©‚©‚Á‚Ä‚¢‚È‚¢‚©
-'   Eu“ú”v‚ÆAŠJn`I—¹‚Ì“ú”i—ï“új‚ª‡‚¤‚©
+' “ú•t‚Ìƒ`ƒFƒbƒNiŠJnEI—¹‚ª“ü—Í‚³‚ê‚Ä‚¢‚éì‹Æj
+'   E‹xH“ú‚Én‚Ü‚Á‚Ä‚¢‚È‚¢‚©E‹xH“ú‚ÉI‚í‚Á‚Ä‚¢‚È‚¢‚©i“r’†‚É‹xH“ú‚ğ‚Í‚³‚Ş‚Ì‚Í‚æ‚¢j
+'   Eu“ú”v‚ÆAŠJn`I—¹‚ÌH–‚·‚é“ú‚Ì”‚ª‡‚¤‚©iŠJnEI—¹‚Ì—¼•û‚ª“ü‚Á‚Ä‚¢‚é‚Æ‚«j
 Private Sub CheckDates()
-    Dim i As Long, d As Long, n As Long, hits As String
+    Dim i As Long, n As Long, e As Long
     For i = 1 To nAct
-        If IsDate(actStartIn(i)) And IsDate(actEndIn(i)) Then
-            If actF(i) > actS(i) Then
-                hits = ""
-                n = 0
-                For d = actS(i) To actF(i) - 1
-                    If IsHoliday(d) Then
-                        n = n + 1
-                        If n <= 3 Then hits = hits & IIf(Len(hits) > 0, "E", "") & Format(CDate(d), "m/d")
-                    End If
-                Next d
-                If n > 0 Then AddMsg i, "‹xH“úi" & hits & IIf(n > 3, "‚Ù‚©", "") & "j‚É‚©‚©‚Á‚Ä‚¢‚Ü‚·"
-                If actDurKnown(i) And actDur(i) > 0 And (actF(i) - actS(i)) <> actDur(i) Then
-                    AddMsg i, "“ú”i" & actDur(i) & "“új‚ÆŠJn`I—¹i" & (actF(i) - actS(i)) & "“új‚ª‡‚¢‚Ü‚¹‚ñ"
+        If IsDate(actStartIn(i)) Then
+            If IsHoliday(actS(i)) Then AddMsg i, "‹xH“úi" & Format(CDate(actS(i)), "m/d") & "j‚Én‚Ü‚Á‚Ä‚¢‚Ü‚·"
+        End If
+        If IsDate(actEndIn(i)) And actF(i) > actS(i) Then
+            e = actF(i) - 1
+            If IsHoliday(e) Then AddMsg i, "‹xH“úi" & Format(CDate(e), "m/d") & "j‚ÉI‚í‚Á‚Ä‚¢‚Ü‚·"
+        End If
+        If IsDate(actStartIn(i)) And IsDate(actEndIn(i)) And actDurKnown(i) Then
+            If actF(i) > actS(i) And actDur(i) > 0 Then
+                n = WorkDaysIn(actS(i), actF(i))
+                If n <> actDur(i) Then
+                    AddMsg i, "“ú”i" & actDur(i) & "“új‚ÆŠJn`I—¹‚ÌH–‚·‚é“úi" & n & "“új‚ª‡‚¢‚Ü‚¹‚ñ"
                 End If
             End If
         End If
@@ -842,12 +986,12 @@ Private Sub CollectGroups()
                 gZone(nGroup) = actZoneIdx(i)
                 gPurp(nGroup) = actPurpIdx(i)
                 gS(nGroup) = actS(i)
-                gF(nGroup) = actF(i)
+                gF(nGroup) = actFd(i)
             End If
             g = dict(key)
             actGroupIdx(i) = g
             If actS(i) < gS(g) Then gS(g) = actS(i)
-            If actF(i) > gF(g) Then gF(g) = actF(i)
+            If actFd(i) > gF(g) Then gF(g) = actFd(i)
             If actCrit(i) Then gCrit(g) = True
         End If
     Next i
@@ -949,7 +1093,7 @@ Private Sub WriteResults(ByVal ws As Worksheet)
 
     heads = Array("ŒvZŠJn", "ŒvZI—¹", "‘S—]—T(“ú)", "ƒNƒŠƒeƒBƒJƒ‹", "ƒ`ƒFƒbƒN", "æsì‹Æ‚Ì–¼‘O")
     hdr = FindHeaderRow(ws, "ì‹ÆID")
-    lastRow = ws.Cells(ws.Rows.Count, FindCol(ws, hdr, "ì‹ÆID")).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, FindCol(ws, hdr, "ì‹ÆID"))
     For k = 1 To 6
         cols(k) = EnsureCol(ws, hdr, CStr(heads(k - 1)))
         If lastRow > hdr Then ws.Range(ws.Cells(hdr + 1, cols(k)), ws.Cells(lastRow, cols(k))).ClearContents
@@ -1032,7 +1176,7 @@ Private Function DrawSheet(ByVal mode As Long) As String
                 itAct(nItem) = i
                 itKind(nItem) = KIND_ACT
                 itS(nItem) = actS(i)
-                itF(nItem) = actF(i)
+                itF(nItem) = actFd(i)
                 actItem(i) = nItem
             End If
         End If
@@ -1095,25 +1239,24 @@ Private Sub SetViewRange()
     viewEnd = maxF + 2
 
     ' –Ú·‚èFuTvu“úvu©“®vi‹ó—“‚à©“®jB©“®‚ÍŠúŠÔ‚ª AUTO_DAY_SPAN “ú‚Ü‚Å‚È‚ç“ú’PˆÊB
-    ' u“úv‚Å‚àŠúŠÔ‚ª MAX_DAY_SPAN “ú‚ğ’´‚¦‚é‚Æ‚«‚ÍA—ñ‚ª‘½‚·‚¬‚Äd‚­‚È‚é‚Ì‚ÅT’PˆÊ‚É‚·‚é
+    ' ‘S‘ÌH’ö‚Íu“úv‚Å‚àŠúŠÔ‚ª MAX_DAY_SPAN “ú‚ğ’´‚¦‚é‚Æ‚«‚ÍA‰¡‚É’·‚­‚È‚è‚·‚¬‚é‚Ì‚ÅT’PˆÊ‚É‚·‚é
+    ' iŠú‚ÌƒV[ƒgEÚ×H’ö‚Íu“úv‚È‚çA’·‚­‚Ä‚à“ú’PˆÊ‚Ì‚Ü‚Üj
     If isOverall Then sv = GetSettingValue("‘S‘Ì‚Ì–Ú·‚è") Else sv = GetSettingValue("Šú‚²‚Æ‚Ì–Ú·‚è")
     If Len(CellText(sv)) = 0 Then sv = GetSettingValue("–Ú·‚è")
     sc = CellText(sv)
+    weekScale = False
     If InStr(sc, "T") > 0 Then
-        daysPerCol = 7
+        weekScale = True
     ElseIf InStr(sc, "“ú") > 0 Then
-        daysPerCol = 1
-        If viewEnd - viewStart > MAX_DAY_SPAN Then
-            daysPerCol = 7
+        If isOverall And viewEnd - viewStart > MAX_DAY_SPAN Then
+            weekScale = True
             If Len(autoWeekNote) > 0 Then autoWeekNote = autoWeekNote & "E"
             autoWeekNote = autoWeekNote & "u" & curSheetName & "v"
         End If
     ElseIf AutoSpan() > AUTO_DAY_SPAN Then
-        daysPerCol = 7
-    Else
-        daysPerCol = 1
+        weekScale = True
     End If
-    If daysPerCol = 7 Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)
+    If weekScale Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)   ' Œ—j‚©‚ç
 End Sub
 
 ' –Ú·‚è‚ªu©“®v‚Ì‚Æ‚«‚ÉŒ©‚éŠúŠÔBŠú‚ÌƒV[ƒg‚ÍA‚Ç‚ÌŠú‚à“¯‚¶–Ú·‚è‚É‚È‚é‚æ‚¤ˆê”Ô’·‚¢Šú‚ÅŒˆ‚ß‚é
@@ -1137,7 +1280,7 @@ Private Sub AddGhosts()
     For k = 1 To n0
         a = itAct(k)
         For Each v In preds(a)
-            If actItem(v) = 0 Then g = GhostItem(KIND_FROM, CLng(v), ClampDay(actF(v)))
+            If actItem(v) = 0 Then g = GhostItem(KIND_FROM, CLng(v), ClampDay(actFd(v)))
         Next v
         For Each v In succs(a)
             If actItem(v) = 0 Then g = GhostItem(KIND_TO, CLng(v), ClampDay(actS(v)))
@@ -1188,19 +1331,19 @@ Private Sub BuildSheetLinks()
             For Each v In preds(a)
                 If actItem(v) > 0 Then
                     fromK = actItem(v)
-                    fa = actF(v)
+                    fa = actFd(v)
                 Else
                     fromK = ghostDict(KIND_FROM & "|" & v)
                     fa = itF(fromK)
                 End If
                 If fromK <> toK Then
-                    AddLink fromK, toK, fa, actS(a), (actCrit(v) And actCrit(a) And actF(v) = actS(a)), pairDict
+                    AddLink fromK, toK, fa, actS(a), (actCrit(v) And actCrit(a) And actFd(v) = actS(a)), pairDict
                 End If
             Next v
             For Each v In succs(a)
                 If actItem(v) = 0 Then
                     gk = ghostDict(KIND_TO & "|" & v)
-                    AddLink toK, gk, actF(a), itS(gk), (actCrit(a) And actCrit(v) And actF(a) = actS(v)), pairDict
+                    AddLink toK, gk, actFd(a), itS(gk), (actCrit(a) And actCrit(v) And actFd(a) = actS(v)), pairDict
                 End If
             Next v
         End If
@@ -1439,7 +1582,7 @@ Private Sub RegisterNodes()
             ' ‚Ü‚Æ‚ß‚Ì’†‚Åì‹Æ‚Ì‚È‚¢ŠúŠÔi‘Ò‚¿j‚Ì—¼’[‚É‚àŒ‹‡“_‚ğ’u‚­
             For i = 1 To nAct
                 If actGroupIdx(i) = itGroup(k) Then
-                    d = actF(i)
+                    d = actFd(i)
                     If d > itS(k) And d < itF(k) Then
                         If Not SegBusy(k, d, d + 1) Then n = NodeIndex(itLane(k), d, actCrit(i), False)
                     End If
@@ -1472,7 +1615,7 @@ Private Function SumEndCrit(ByVal k As Long, ByVal atStart As Boolean) As Boolea
             If atStart Then
                 If actS(i) = itS(k) Then SumEndCrit = True
             Else
-                If actF(i) = itF(k) Then SumEndCrit = True
+                If actFd(i) = itF(k) Then SumEndCrit = True
             End If
             If SumEndCrit Then Exit Function
         End If
@@ -1546,7 +1689,7 @@ Private Function SegCrit(ByVal k As Long, ByVal e1 As Long, ByVal e2 As Long) As
     g = itGroup(k)
     For i = 1 To nAct
         If actGroupIdx(i) = g And actCrit(i) Then
-            If actS(i) < e2 And actF(i) > e1 Then
+            If actS(i) < e2 And actFd(i) > e1 Then
                 SegCrit = True
                 Exit Function
             End If
@@ -1564,7 +1707,7 @@ Private Function SegBusy(ByVal k As Long, ByVal e1 As Long, ByVal e2 As Long) As
     g = itGroup(k)
     For i = 1 To nAct
         If actGroupIdx(i) = g Then
-            If actS(i) < e2 And actF(i) > e1 Then
+            If actS(i) < e2 And actFd(i) > e1 Then
                 SegBusy = True
                 Exit Function
             End If
@@ -1643,7 +1786,7 @@ Private Function SubLabel(ByVal k As Long) As String
             t = gCoLabel(g)
             If gF(g) > gS(g) Then
                 If Len(t) > 0 Then t = t & "E"
-                t = t & (gF(g) - gS(g)) & "“ú"
+                t = t & WorkDaysIn(gS(g), gF(g)) & "“ú"
             End If
             If gProg(g) > 0 And Not showProg Then
                 If Len(t) > 0 Then t = t & "E"
@@ -1653,7 +1796,7 @@ Private Function SubLabel(ByVal k As Long) As String
             t = actCo(a)
             If actF(a) > actS(a) Then
                 If Len(t) > 0 Then t = t & "E"
-                t = t & (actF(a) - actS(a)) & "“ú"
+                t = t & WorkDaysIn(actS(a), actF(a)) & "“ú"
             End If
             If actProg(a) > 0 And Not showProg Then
                 If Len(t) > 0 Then t = t & "E"
@@ -1721,9 +1864,12 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     rowWeekday = rowMonth + 2
     firstLaneRow = rowMonth + 3
 
-    nCols = (viewEnd - viewStart) \ daysPerCol + 1
-    If daysPerCol = 1 And nCols < MIN_DAY_COLS Then nCols = MIN_DAY_COLS
-    If daysPerCol = 7 And nCols < MIN_WEEK_COLS Then nCols = MIN_WEEK_COLS
+    nCols = viewEnd - viewStart + 1                 ' “ú•t‚Ì—ñ‚Í1“ú1—ñiT’PˆÊ‚àj
+    If weekScale Then
+        nCols = WholeWeeks(MaxL(nCols, MIN_WEEK_COLS * 7))
+    ElseIf nCols < MIN_DAY_COLS Then
+        nCols = MIN_DAY_COLS
+    End If
 
     With wsC.Cells
         .Font.Name = "ŸàƒSƒVƒbƒN"
@@ -1741,19 +1887,24 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     wsC.Columns(labelCols).ColumnWidth = LABEL_COL_WIDTH
     dateCol = labelCols + 1
     SetDateColumns
-    dayW = wsC.Cells(1, dateCol).Width / daysPerCol      ' 1“ú•ª‚Ì•iptj
+    dayW = wsC.Cells(1, dateCol).Width                  ' 1“ú•ª‚Ì•iptj
 End Sub
 
 Private Sub SetDateColumns()
     wsC.Range(wsC.Columns(dateCol), wsC.Columns(dateCol + nCols - 1)).ColumnWidth = _
-        IIf(daysPerCol = 1, DAY_COL_WIDTH, WEEK_COL_WIDTH)
+        IIf(weekScale, WEEK_DAY_COL_WIDTH, DAY_COL_WIDTH)
     xCacheOK = False
 End Sub
+
+' T’PˆÊ‚Ì‚Æ‚«‚ÍA“ú•t‚Ì—ñ‚Ì”‚ğT‚ÌØ‚ê–Úi7“ú‚²‚Æj‚É‚»‚ë‚¦‚é
+Private Function WholeWeeks(ByVal n As Long) As Long
+    If weekScale Then WholeWeeks = ((n + 6) \ 7) * 7 Else WholeWeeks = n
+End Function
 
 ' ƒ‰ƒxƒ‹‚ª‰E’[‚©‚ç‚Í‚İo‚³‚È‚¢‚æ‚¤A•K—v‚È‚ç“ú•t‚Ì—ñ‚ğ‘«‚·
 Private Sub FitColumns()
     Dim needCols As Long
-    needCols = Int(LayoutLabels() / daysPerCol) + 2
+    needCols = WholeWeeks(Int(LayoutLabels()) + 2)
     If needCols > nCols Then
         nCols = needCols
         SetDateColumns
@@ -1805,10 +1956,11 @@ End Function
 ' •\‘èE“ú•t–Ú·‚èE–ÔŠ|‚¯i“y“úE‹xH“újEH––¼
 Private Sub DrawGrid()
     Dim c As Long, d As Long, col As Long, lastCol As Long, lastLaneRow As Long
-    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean
+    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean, hasExtra As Boolean
     Dim bi As Long, b1 As Long, runEnd As Boolean
     Dim sv As Variant, txt As String, created As Variant
     Dim vMon() As Variant, vDay() As Variant, vWk() As Variant, clr As Long, runClr As Long, runCol As Long
+    Dim noWork As Boolean, runNoWork As Boolean
 
     lastCol = dateCol + nCols - 1
     lastLaneRow = firstLaneRow + nLane - 1
@@ -1826,17 +1978,20 @@ Private Sub DrawGrid()
     If usePurps Then wsC.Cells(rowDay, 1).Value = "–Ú“I"
     If useZones Then wsC.Cells(rowDay, zoneCol).Value = "H‹æ"
     wsC.Cells(rowDay, labelCols).Value = "H–"
-    ' “úiTj‚Ì‹«–Ú‚ÌŒrüF”–‚¢ŠDF‚Ì×üBŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚éi—ñ‚²‚Æ‚Å‚Í‚È‚­A‚Ü‚Æ‚ß‚Äˆø‚­j
+    ' “ú‚Ì‹«–Ú‚ÌŒrüF“ú’PˆÊ‚Í”–‚¢ŠDF‚Ì×üAT’PˆÊ‚Í“_üiT‚Ì‹«–Ú‚Í‰º‚ÅÀü‚É‚·‚éjBŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚é
+    ' i—ñ‚²‚Æ‚Å‚Í‚È‚­A‚Ü‚Æ‚ß‚Äˆø‚­j
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(lastLaneRow, lastCol)).Borders(xlInsideVertical)
-        .LineStyle = xlContinuous
+        .LineStyle = IIf(weekScale, xlDot, xlContinuous)
         .Weight = xlThin
-        .Color = RGB(217, 217, 217)
+        .Color = IIf(weekScale, RGB(191, 191, 191), RGB(217, 217, 217))
     End With
-    ' –Ú·‚è‚Ì•¶š‚Í”z—ñ‚É‚½‚ß‚Ä1‰ñ‚Å‘‚«A–ÔŠ|‚¯‚Í“¯‚¶F‚ª‘±‚­—ñ‚ğ‚Ü‚Æ‚ß‚Ä“h‚é
+    ' –Ú·‚è‚Ì•¶š‚Í”z—ñ‚É‚½‚ß‚Ä1‰ñ‚Å‘‚«A–ÔŠ|‚¯‚Í“¯‚¶“h‚è•û‚ª‘±‚­—ñ‚ğ‚Ü‚Æ‚ß‚Ä“h‚é
     ReDim vMon(1 To 1, 1 To nCols): ReDim vDay(1 To 1, 1 To nCols): ReDim vWk(1 To 1, 1 To nCols)
+    runCol = dateCol
     For c = 0 To nCols - 1
-        d = viewStart + c * daysPerCol
+        d = viewStart + c
         col = dateCol + c
+        wd = Weekday(CDate(d), vbSunday)
         If c = 0 Or Month(CDate(d)) <> prevMonth Then
             vMon(1, c + 1) = "'" & Format(CDate(d), "yyyy/m")
             If c > 0 Then       ' Œ‚Ì‹«–Ú‚Ì”Z‚¢üiÅ‰‚Ì—ñ‚Ì¶‚ÍA‚ ‚Æ‚Å‚Ü‚Æ‚ß‚Äˆø‚­j
@@ -1846,40 +2001,51 @@ Private Sub DrawGrid()
                 End With
             End If
             prevMonth = Month(CDate(d))
+        ElseIf weekScale And wd = vbMonday Then        ' T‚Ì‹«–ÚiŒ—j‚Ì¶j‚ÌÀü
+            With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(lastLaneRow, col)).Borders(xlEdgeLeft)
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+                .Color = RGB(166, 166, 166)
+            End With
         End If
-        clr = 0
-        If daysPerCol = 1 Then
-            wd = Weekday(CDate(d), vbSunday)
+        clr = 0                                         ' “y—j‚Í”–‚¢ÂA“ú—j‚Í”–‚¢Ôi“ú’PˆÊ‚àT’PˆÊ‚àj
+        If IsExtraWorkDay(d) Then                       ' —Õ‚ÌH–“úi—áŠO‚Ì“ú‚Å ›j‚Í”–‚¢—Î
+            clr = EXTRA_FILL
+            hasExtra = True
+        ElseIf wd = vbSaturday Then
+            clr = SAT_FILL
+        ElseIf wd = vbSunday Then
+            clr = SUN_FILL
+        End If
+        noWork = IsHoliday(d)                           ' ‹xH“ú‚ÍÎü
+        If noWork Then hasHol = True
+        If weekScale Then
+            If wd = vbMonday Then vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")   ' T‚Ì‰‚ßiŒ—jj‚Ì“ú•t
+        Else
             vDay(1, c + 1) = Day(CDate(d))
             vWk(1, c + 1) = Mid$("“úŒ‰Î…–Ø‹à“y", wd, 1)
-            If IsHoliday(d) Then
-                clr = RGB(252, 228, 214)
-                hasHol = True
-            ElseIf wd = vbSunday Or wd = vbSaturday Then
-                clr = RGB(242, 242, 242)
+            If wd = vbSunday Then
+                wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
+            ElseIf wd = vbSaturday Then
+                wsC.Cells(rowWeekday, col).Font.Color = RGB(0, 112, 192)
             End If
-            If wd = vbSunday Then wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
-        Else
-            vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")
         End If
-        If clr <> runClr Then
-            If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, col - 1)).Interior.Color = runClr
+        If clr <> runClr Or noWork <> runNoWork Then
+            PaintDays runCol, col - 1, runClr, runNoWork, lastLaneRow
             runCol = col
             runClr = clr
+            runNoWork = noWork
         End If
     Next c
-    If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, lastCol)).Interior.Color = runClr
+    PaintDays runCol, lastCol, runClr, runNoWork, lastLaneRow
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Value = vMon
     wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowDay, lastCol)).Value = vDay
-    If daysPerCol = 1 Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
+    If Not weekScale Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
     If showProg Then
-        If progT >= viewStart And progT < viewStart + nCols * daysPerCol Then
-            c = (progT - viewStart) \ daysPerCol
-            MarkStatusDay dateCol + c, viewStart + c * daysPerCol
-        End If
+        If progT >= viewStart And progT < viewStart + nCols Then MarkStatusDay dateCol + progT - viewStart
     End If
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowWeekday, lastCol))
-        .HorizontalAlignment = xlCenter
+        .HorizontalAlignment = IIf(weekScale, xlLeft, xlCenter)     ' T’PˆÊ‚Ì“ú•t‚ÍŒ—j‚Ì—ñ‚©‚ç‰E‚Ö‚Í‚İo‚µ‚Ä‘‚­
         .Font.Size = 8
     End With
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Font.Size = 8
@@ -1898,14 +2064,10 @@ Private Sub DrawGrid()
     If Not IsDate(created) Then created = Date
     txt = ""
     If Len(CellText(sv)) > 0 Then txt = "‘æ" & CellText(sv) & "”Å@"
-    txt = txt & "ì¬“úF" & Format(created, "yyyy/mm/dd") & "@–Ú·‚èF" & IIf(daysPerCol = 1, "“ú", "T") & "’PˆÊ"
-    If daysPerCol = 1 Then
-        If hasHol Then
-            txt = txt & "i–ÔŠ|‚¯FŠDF“y“úAÔ‹xH“új"
-        Else
-            txt = txt & "i–ÔŠ|‚¯‚Í“y“új"
-        End If
-    End If
+    txt = txt & "ì¬“úF" & Format(created, "yyyy/mm/dd") & "@–Ú·‚èF" & IIf(weekScale, "T", "“ú") & "’PˆÊi"
+    If weekScale Then txt = txt & "Œ—jn‚Ü‚èB“_ü‚Í“ú‚Ì‹æØ‚èB"
+    txt = txt & "–ÔŠ|‚¯FÂ“yAÔ“ú" & IIf(hasExtra, "A—Î—Õ‚ÌH–“ú", "") & _
+          IIf(hasHol, "AÎü‹xH“ú", "") & "j"
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
 
@@ -1962,6 +2124,20 @@ Private Sub DrawGrid()
     End If
     If ghostFromFirst > 0 Then LabelGhostLanes ghostFromFirst, ghostFromLast, "‘¼‚ÌŠú‚©‚ç", lastCol
     If ghostToFirst > 0 Then LabelGhostLanes ghostToFirst, ghostToLast, "‘¼‚ÌŠú‚Ö", lastCol
+End Sub
+
+' “ú•t‚Ì—ñ c1`c2 ‚Ì–ÔŠ|‚¯F“yE“ú‚ÌFi“ú•t‚Ìs‚©‚ç‰ºj‚ÆA‹xH“ú‚ÌÎüi’i‚Ìs‚¾‚¯j
+Private Sub PaintDays(ByVal c1 As Long, ByVal c2 As Long, ByVal clr As Long, ByVal noWork As Boolean, _
+                      ByVal lastRow As Long)
+    If c2 < c1 Then Exit Sub
+    If clr <> 0 Then wsC.Range(wsC.Cells(rowDay, c1), wsC.Cells(lastRow, c2)).Interior.Color = clr
+    If noWork Then
+        With wsC.Range(wsC.Cells(firstLaneRow, c1), wsC.Cells(lastRow, c2)).Interior
+            If clr = 0 Then .Color = RGB(255, 255, 255)
+            .Pattern = xlPatternLightUp
+            .PatternColor = HOL_HATCH
+        End With
+    End If
 End Sub
 
 ' c²‚ÌH‹æE–Ú“I‚Ì—“Fcol —ñ‚Ì’i L1`L2 ‚ğŒ‹‡‚µ‚Ä“h‚èA–¼‘O‚ğ‘‚«A—“‚Ì‰º‚É‹«–Ú‚Ìü‚ğˆø‚­icol —ñ‚©‚ç‰E’[‚Ü‚Åj
@@ -2910,7 +3086,9 @@ Private Sub LegendChip(ByVal txt As String, ByVal clr As Long, ByRef x As Double
     x = x + w
 End Sub
 
-' ˜gü‚ğÁ‚µAŒ©o‚µ‚ğŒÅ’è‚µAA3‰¡E‰¡1ƒy[ƒW‚Åˆóü‚Å‚«‚é‚æ‚¤‚É‚·‚é
+' ˜gü‚ğÁ‚µAŒ©o‚µ‚ğŒÅ’è‚µAˆóü‚Ìİ’è‚ğ‚·‚é
+'   A3‰¡E—]”’0E‚·‚×‚Ä‚Ìs‚ğ1ƒy[ƒW‚Éi‰¡‚Í‰½ƒy[ƒW‚É‚È‚Á‚Ä‚à‚æ‚¢jB‚Ç‚Ìƒy[ƒW‚É‚àA¶‚É–Ú“IEH‹æEH–‚Ì—ñA
+'   ã‚É•\‘è`“ú•t‚Ì–Ú·‚è‚Ìs‚ğ•t‚¯‚éiƒ^ƒCƒgƒ‹—ñEƒ^ƒCƒgƒ‹sjBƒy[ƒW”Ô†‚Í‰Eãi•\‘è‚Ìs‚Ì‰E‚Í‹ó‚¢‚Ä‚¢‚éj
 Private Sub FinishSheet()
     Dim lastCol As Long
 
@@ -2928,17 +3106,23 @@ Private Sub FinishSheet()
     Application.PrintCommunication = False
     With wsC.PageSetup
         .PrintArea = wsC.Range(wsC.Cells(1, 1), wsC.Cells(legendLastRow + 1, lastCol)).Address
+        .PrintTitleRows = wsC.Range(wsC.Rows(1), wsC.Rows(rowWeekday)).Address             ' •\‘è`“ú•t‚Ì–Ú·‚è
+        .PrintTitleColumns = wsC.Range(wsC.Columns(1), wsC.Columns(labelCols)).Address   ' –Ú“IEH‹æEH–
         .Orientation = xlLandscape
         .PaperSize = xlPaperA3
         .Zoom = False
-        .FitToPagesWide = 1
-        .FitToPagesTall = False
-        .CenterHorizontally = True
-        .LeftMargin = Application.CentimetersToPoints(1)
-        .RightMargin = Application.CentimetersToPoints(1)
-        .TopMargin = Application.CentimetersToPoints(1.2)
-        .BottomMargin = Application.CentimetersToPoints(1.2)
-        .CenterFooter = "&P / &N"
+        .FitToPagesWide = False         ' ‚·‚×‚Ä‚Ìs‚ğ1ƒy[ƒW‚Éˆóü
+        .FitToPagesTall = 1
+        .CenterHorizontally = False
+        .LeftMargin = 0
+        .RightMargin = 0
+        .TopMargin = 0
+        .BottomMargin = 0
+        .HeaderMargin = Application.CentimetersToPoints(0.5)    ' ƒy[ƒW”Ô†‚ÌˆÊ’ui†‚Éˆóü‚µ‚Ä‚àØ‚ê‚È‚¢‚æ‚¤‚Éj
+        .FooterMargin = 0
+        .ScaleWithDocHeaderFooter = False                       ' k¬‚µ‚Ä‚àƒy[ƒW”Ô†‚Í“Ç‚ß‚é‘å‚«‚³‚Ì‚Ü‚Ü
+        .RightHeader = "&10&P / &N"                             ' ƒy[ƒW”Ô†‚Í‰Eãi‰º‚Í–}—á‚Æd‚È‚è‚â‚·‚¢j
+        .CenterFooter = ""
     End With
     Application.PrintCommunication = True
     On Error GoTo 0
@@ -2948,17 +3132,15 @@ End Sub
 '==============================================================================
 '  }Œ`‚ğ•`‚­•”•i
 '==============================================================================
-' “ú d ‚Ì¶’[‚Ì x À•WB“ú•t‚Ì—ñ‚Í‚·‚×‚Ä“¯‚¶•‚È‚Ì‚ÅAÅ‰‚Ì—ñ‚ÌˆÊ’u‚Æ•‚ğˆê“x‚¾‚¯“Ç‚ñ‚ÅŒvZ‚·‚é
+' “ú d ‚Ì¶’[‚Ì x À•WB“ú•t‚Ì—ñ‚Í1“ú1—ñ‚Å‚·‚×‚Ä“¯‚¶•‚È‚Ì‚ÅAÅ‰‚Ì—ñ‚ÌˆÊ’u‚Æ•‚ğˆê“x‚¾‚¯“Ç‚ñ‚ÅŒvZ‚·‚é
 ' i–ˆ‰ñƒZƒ‹‚É–â‚¢‡‚í‚¹‚é‚ÆA€–Ú‚ª‘½‚¢‚Æ‚«‚É’x‚¢j
 Private Function XOf(ByVal d As Long) As Double
-    Dim off As Long
     If Not xCacheOK Then
         xLeft0 = wsC.Cells(rowDay, dateCol).Left
         xColW = wsC.Cells(rowDay, dateCol).Width
         xCacheOK = True
     End If
-    off = d - viewStart
-    XOf = xLeft0 + (off \ daysPerCol) * xColW + xColW * ((off Mod daysPerCol) / daysPerCol)
+    XOf = xLeft0 + (d - viewStart) * xColW
 End Function
 
 ' ’i L ‚Ì–îü‚Ì y À•Wi’i‚Ìs‚Ìã’[‚ÍAs‚Ì‚‚³‚ğŒˆ‚ß‚½‚ ‚Æ‚Éˆê“x‚¾‚¯“Ç‚Şj
@@ -3192,15 +3374,32 @@ End Sub
 '==============================================================================
 '  ‹xH“ú
 '==============================================================================
+' ‹xH“úiH–‚µ‚È‚¢“új‚©F—áŠO‚Ì“ú‚É‘‚¢‚Ä‚ ‚ê‚Î‚»‚êA‚È‚¯‚ê‚Î—j“ú‚ÌŒˆ‚Ü‚è
 Private Function IsHoliday(ByVal d As Long) As Boolean
+    Dim key As String
     If holDict Is Nothing Then Exit Function
-    IsHoliday = holDict.Exists(CStr(d))
+    key = CStr(d)
+    If holDict.Exists(key) Then
+        IsHoliday = holDict(key)
+    Else
+        IsHoliday = wdOff(Weekday(CDate(d), vbSunday))
+    End If
 End Function
 
-' d ‚ª‹xH“ú‚È‚çA‹xH“ú‚Å‚È‚¢“ú‚Ü‚Åi‚ß‚é
+' —Õ‚ÌH–“ú‚©FH–ƒJƒŒƒ“ƒ_[‚Ì—áŠO‚Ì“ú‚ÅAH–‚·‚é“úi›j‚É‚µ‚½“úi‹x‚İ‚Ì—j“úE˜A‹xEj“ú‚È‚Ç‚ÉH–‚·‚é“új
+Private Function IsExtraWorkDay(ByVal d As Long) As Boolean
+    Dim key As String
+    If holDict Is Nothing Then Exit Function
+    key = CStr(d)
+    If holDict.Exists(key) Then IsExtraWorkDay = Not holDict(key)
+End Function
+
+' d ‚ª‹xH“ú‚È‚çA‹xH“ú‚Å‚È‚¢“ú‚Ü‚Åi‚ß‚éi‹x‚İ‚ª’·‚·‚¬‚é‚Æ‚«‚Í“r’†‚Å‚â‚ß‚éj
 Private Function NextWorkDay(ByVal d As Long) As Long
-    Do While IsHoliday(d)
+    Dim n As Long
+    Do While IsHoliday(d) And n < 4000
         d = d + 1
+        n = n + 1
     Loop
     NextWorkDay = d
 End Function
@@ -3209,7 +3408,7 @@ End Function
 Private Function AddWorkDays(ByVal s As Long, ByVal dur As Long) As Long
     Dim d As Long, cnt As Long
     d = s
-    Do While cnt < dur
+    Do While cnt < dur And d - s < dur + 4000
         If Not IsHoliday(d) Then cnt = cnt + 1
         d = d + 1
     Loop
@@ -3224,11 +3423,22 @@ Private Function StartFromEnd(ByVal e As Long, ByVal dur As Long) As Long
         Exit Function
     End If
     d = e + 1
-    Do While cnt < dur
+    Do While cnt < dur And e - d < dur + 4000
         d = d - 1
         If Not IsHoliday(d) Then cnt = cnt + 1
     Loop
     StartFromEnd = d
+End Function
+
+' fiI—¹“ú‚Ì—‚“új‚æ‚è‘O‚ÅA‹xH“ú‚Å‚È‚¢ÅŒã‚Ì“úis ‚æ‚è‘O‚É‚Í–ß‚ç‚È‚¢j
+Private Function LastWorkDay(ByVal f As Long, ByVal s As Long) As Long
+    Dim d As Long
+    d = f - 1
+    Do While d > s And IsHoliday(d)
+        d = d - 1
+    Loop
+    If d < s Then d = s
+    LastWorkDay = d
 End Function
 
 
@@ -3365,6 +3575,17 @@ Private Function FindCol(ByVal ws As Worksheet, ByVal hdr As Long, ByVal key As 
             Exit Function
         End If
     Next c
+End Function
+
+' H’öƒf[ƒ^‚ÌÅŒã‚Ìsiì‹ÆID‚Ì—ñ‚Å’l‚Ì‚ ‚éA‚¢‚¿‚Î‚ñ‰º‚ÌsjBEnd(xlUp) ‚ÍƒtƒBƒ‹ƒ^[‚Å‰B‚ê‚½s‚ğ”ò‚Î‚·‚Ì‚ÅA
+' •\‚ªƒe[ƒuƒ‹‚È‚çƒe[ƒuƒ‹‚ÌÅŒã‚ÌsAƒV[ƒg‚Åi‚è‚İ’†‚È‚çg‚Á‚Ä‚¢‚é”ÍˆÍ‚ÌÅŒã‚Ìs‚Æ‚­‚ç‚×‚ÄA‘å‚«‚¢‚Ù‚¤‚É‚·‚é
+Private Function DataLastRow(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId As Long) As Long
+    Dim r As Long, lo As ListObject
+    r = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    Set lo = ws.Cells(hdr, cId).ListObject
+    If Not lo Is Nothing Then r = MaxL(r, lo.Range.Row + lo.Range.Rows.Count - 1)
+    If ws.FilterMode Then r = MaxL(r, ws.UsedRange.Row + ws.UsedRange.Rows.Count - 1)
+    DataLastRow = MaxL(r, hdr)
 End Function
 
 Private Function EnsureCol(ByVal ws As Worksheet, ByVal hdr As Long, ByVal key As String) As Long
@@ -3610,7 +3831,7 @@ End Function
 ' H’öƒf[ƒ^‚Åì‹ÆID‚Ìs‚ğ’T‚·iŒ©‚Â‚©‚ç‚È‚¯‚ê‚Î 0j
 Private Function FindActRow(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId As Long, ByVal id As String) As Long
     Dim r As Long, lastRow As Long
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     For r = hdr + 1 To lastRow
         If NormalizeId(CellText(ws.Cells(r, cId).Value)) = id Then
             FindActRow = r
@@ -3641,7 +3862,7 @@ Private Function IsUpstream(ByVal ws As Worksheet, ByVal hdr As Long, ByVal cId 
     Dim cur As String, v As Variant
 
     Set dict = CreateObject("Scripting.Dictionary")
-    lastRow = ws.Cells(ws.Rows.Count, cId).End(xlUp).Row
+    lastRow = DataLastRow(ws, hdr, cId)
     For r = hdr + 1 To lastRow
         cur = NormalizeId(CellText(ws.Cells(r, cId).Value))
         If Len(cur) > 0 And Not dict.Exists(cur) Then dict.Add cur, CellText(ws.Cells(r, cPred).Value)
@@ -3803,7 +4024,7 @@ Private Function ApplyMovedNodes(ByVal wsD As Worksheet, ByVal movedIds As Colle
     Dim ws As Worksheet, shp As Shape, parts() As String, ents() As String, e() As String
     Dim newS As Object, newF As Object, oldS As Object, oldF As Object, bad As Object
     Dim order As New Collection, okIds As New Collection, v As Variant
-    Dim day As Long, delta As Long, j As Long, nIgnored As Long, nOk As Long
+    Dim day As Long, delta As Long, j As Long, nIgnored As Long, nOk As Long, lastD As Long
     Dim s1 As Long, f1 As Long, s2 As Long, f2 As Long, id As String, msg As String, skipped As String
     Dim hdr As Long, cId As Long, cStart As Long, cEnd As Long, cDur As Long, r As Long
     Dim ans As VbMsgBoxResult
@@ -3867,7 +4088,7 @@ Private Function ApplyMovedNodes(ByVal wsD As Worksheet, ByVal movedIds As Colle
         id = CStr(v)
         s1 = oldS(id)
         f1 = oldF(id)
-        If newS.Exists(id) Then s2 = newS(id) Else s2 = s1
+        If newS.Exists(id) Then s2 = NextWorkDay(newS(id)) Else s2 = s1    ' ‹xH“ú‚É“®‚©‚µ‚½n‚Ü‚è‚ÍŸ‚ÌH–‚·‚é“ú
         If newF.Exists(id) Then f2 = newF(id) Else f2 = f1
         If bad.Exists(id) Then
             skipped = skipped & vbCrLf & "E" & id & "FƒV[ƒg‚É‚æ‚Á‚Ä“®‚©‚µ‚½“ú‚ªˆá‚¢‚Ü‚·"
@@ -3914,8 +4135,14 @@ Private Function ApplyMovedNodes(ByVal wsD As Worksheet, ByVal movedIds As Colle
             s2 = newS(id)
             f2 = newF(id)
             WriteDate wsD.Cells(r, cStart), s2
-            If f2 > s2 Then WriteDate wsD.Cells(r, cEnd), f2 - 1 Else WriteDate wsD.Cells(r, cEnd), s2
-            wsD.Cells(r, cDur).Value = f2 - s2
+            If f2 > s2 Then
+                lastD = LastWorkDay(f2, s2)             ' I‚í‚è‚ÍA‹xH“ú‚ğœ‚¢‚½ÅŒã‚ÌH–‚·‚é“ú
+                WriteDate wsD.Cells(r, cEnd), lastD
+                wsD.Cells(r, cDur).Value = WorkDaysIn(s2, lastD + 1)
+            Else
+                WriteDate wsD.Cells(r, cEnd), s2
+                wsD.Cells(r, cDur).Value = 0
+            End If
             movedIds.Add id
             movedApplied = movedApplied + 1
         End If
@@ -3929,7 +4156,7 @@ End Function
 Private Function PushSuccessors(ByVal wsD As Worksheet, ByVal movedIds As Collection) As Boolean
     Dim idx As Object, i As Long, k As Long, v As Variant, m As Long, mx As Long, d As Long, n As Long
     Dim s2() As Long, f2() As Long, isMoved() As Boolean, isChg() As Boolean, needW() As Boolean
-    Dim hasChg As Boolean, fixedS As Boolean, ns As Long, nf As Long, msg As String
+    Dim hasChg As Boolean, fixedS As Boolean, ns As Long, nf As Long, msg As String, w As Long
     Dim hdr As Long, cStart As Long, cEnd As Long, r As Long
 
     Set idx = CreateObject("Scripting.Dictionary")
@@ -3960,9 +4187,15 @@ Private Function PushSuccessors(ByVal wsD As Worksheet, ByVal movedIds As Collec
                 fixedS = IsDate(actStartIn(i)) Or (IsDate(actEndIn(i)) And actDurKnown(i))
                 If fixedS Then
                     If s2(i) < mx Then
-                        d = NextWorkDay(mx) - s2(i)
-                        s2(i) = s2(i) + d
-                        If IsDate(actEndIn(i)) Then f2(i) = f2(i) + d Else f2(i) = FinishFor(i, s2(i))
+                        w = WorkDaysIn(actS(i), actF(i))      ' H–‚·‚é“ú‚Ì”‚ğ•Ï‚¦‚¸‚É‚¸‚ç‚·
+                        s2(i) = NextWorkDay(mx)
+                        If Not IsDate(actEndIn(i)) Then
+                            f2(i) = FinishFor(i, s2(i))
+                        ElseIf actF(i) > actS(i) Then
+                            f2(i) = AddWorkDays(s2(i), MaxL(w, 1))
+                        Else
+                            f2(i) = s2(i)
+                        End If
                         If f2(i) < s2(i) Then f2(i) = s2(i)
                         isChg(i) = True
                         needW(i) = True
@@ -4017,10 +4250,11 @@ Private Sub WriteDate(ByVal cell As Range, ByVal d As Long)
     cell.Value = CDate(d)
 End Sub
 
-' u1/19`1/22i4“újv‚Ì‚æ‚¤‚ÈŠúŠÔ‚Ì•\‹Lif ‚ÍI—¹“ú‚Ì—‚“új
+' u1/19`1/22i4“újv‚Ì‚æ‚¤‚ÈŠúŠÔ‚Ì•\‹Lif ‚ÍI—¹“ú‚Ì—‚“úB“ú”‚ÍH–‚·‚é“ú‚Ì”j
 Private Function SpanText(ByVal st As Long, ByVal f As Long) As String
     If f > st Then
-        SpanText = Format(CDate(st), "m/d") & "`" & Format(CDate(f - 1), "m/d") & "i" & (f - st) & "“új"
+        SpanText = Format(CDate(st), "m/d") & "`" & Format(CDate(LastWorkDay(f, st)), "m/d") & "i" & _
+                   WorkDaysIn(st, f) & "“új"
     Else
         SpanText = Format(CDate(st), "m/d") & "i0“új"
     End If
@@ -4326,10 +4560,11 @@ Private Sub WriteProgressCols(ByVal ws As Worksheet, ByVal hdr As Long, ByVal la
     ws.Range(ws.Cells(hdr + 1, c(4)), ws.Cells(lastRow, c(4))).NumberFormat = "[Red]0""“ú’x‚ê"";[Blue]0""“ú‘‚¢"";""|"""
 End Sub
 
-' Šî€“ú‚Ì—ñiT’PˆÊ‚È‚ç‚»‚ÌTj‚Ì–Ú·‚è‚Éˆó‚ğ•t‚¯‚é
-Private Sub MarkStatusDay(ByVal col As Long, ByVal d As Long)
-    If progT < d Or progT >= d + daysPerCol Then Exit Sub
-    With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(rowWeekday, col))
+' Šî€“ú‚Ì—ñ‚Ì–Ú·‚è‚Éˆó‚ğ•t‚¯‚éiT’PˆÊ‚ÍA“ú•t‚Ìs‚ÉŒ—j‚Ì“ú•t‚ğ‘‚­‚Ì‚ÅA‚»‚Ì‰º‚Ìs‚¾‚¯j
+Private Sub MarkStatusDay(ByVal col As Long)
+    Dim r1 As Long
+    If weekScale Then r1 = rowWeekday Else r1 = rowDay
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(rowWeekday, col))
         .Interior.Color = PROG_COLOR
         .Font.Color = RGB(255, 255, 255)
         .Font.Bold = True
@@ -4351,7 +4586,7 @@ End Sub
 ' –}—á‚ÌƒCƒiƒYƒ}üiƒCƒiƒYƒ}ü‚ğ•`‚¢‚½ƒV[ƒg‚¾‚¯j
 Private Sub LegendProgress(ByRef x As Double, ByVal y As Double)
     Dim txt As String
-    If progTb < viewStart Or progTb > viewStart + nCols * daysPerCol Then Exit Sub
+    If progTb < viewStart Or progTb > viewStart + nCols Then Exit Sub
     DrawZigzag x, y
     txt = "ƒCƒiƒYƒ}üi" & DateMD(progT) & "‚Ìì‹ÆI—¹“_‚Ìi‚İE’x‚êj"
     AddText x + 42, y, txt, 8, RGB(0, 0, 0), False, 2
@@ -4366,7 +4601,7 @@ Private Sub DrawProgressLine()
 
     If Not showProg Then Exit Sub
     lo = viewStart
-    hi = viewStart + nCols * daysPerCol
+    hi = viewStart + nCols
     If progTb < lo Or progTb > hi Then Exit Sub
     xT = XOfDay(progTb)
     Set fb = wsC.Shapes.BuildFreeform(msoEditingAuto, xT, wsC.Cells(firstLaneRow, 1).Top)

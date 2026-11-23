@@ -114,7 +114,7 @@ def collect_groups(acts, c, zn):
         p = sum(acts[i]["prog"] * (c["F"][i] - c["S"][i]) for i in mem)
         G[g] = dict(name=keys[g - 1][2], zone=keys[g - 1][1], purpose=keys[g - 1][0], kouji=acts[mem[0]]["kouji"],
                     members=mem,
-                    S=min(c["S"][i] for i in mem), F=max(c["F"][i] for i in mem),
+                    S=min(c["S"][i] for i in mem), F=max(c.get("FD", c["F"])[i] for i in mem),
                     crit=any(c["crit"][i] for i in mem),
                     co_label=(cos[0] if len(cos) == 1 else (f"{cos[0]}ほか{len(cos) - 1}社" if cos else "")),
                     co_name=(cos[0] if len(cos) == 1 else ""),
@@ -140,9 +140,10 @@ def name_label(acts, ph, gr, zn, it):
     return t
 
 
-def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
+def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None, week=False):
     """mode：0＝全体工程、-1＝詳細工程、1以上＝その期"""
-    S, F, crit, preds, succs = c["S"], c["F"], c["crit"], c["preds"], c["succs"]
+    S, crit, preds, succs = c["S"], c["crit"], c["preds"], c["succs"]
+    F = c.get("FD", c["F"])  # 矢線の終点（VBA の actFd。休工日が続くときは次の工事する日）
     n = len(acts)
     overall = (mode == 0)
     use_sum = overall and len(gr["G"]) > 0
@@ -161,6 +162,8 @@ def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
     minS = min(it["s"] for it in items)
     maxF = max(it["f"] for it in items)
     vs, ve = minS - 2, maxF + 2
+    if week:  # 週単位の目盛りは月曜から
+        vs -= dt.date.fromordinal(vs).weekday()
 
     def clamp(d):
         return min(max(d, vs + 1), ve)
