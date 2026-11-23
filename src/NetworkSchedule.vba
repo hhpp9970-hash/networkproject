@@ -3054,7 +3054,9 @@ Private Sub LegendChip(ByVal txt As String, ByVal clr As Long, ByRef x As Double
     x = x + w
 End Sub
 
-' 枠線を消し、見出しを固定し、A3横・横1ページで印刷できるようにする
+' 枠線を消し、見出しを固定し、印刷の設定をする
+'   A3横・余白0・すべての行を1ページに（横は何ページになってもよい）。どのページにも、左に目的・工区・工事の列、
+'   上に表題～日付の目盛りの行を付ける（タイトル列・タイトル行）
 Private Sub FinishSheet()
     Dim lastCol As Long
 
@@ -3072,17 +3074,21 @@ Private Sub FinishSheet()
     Application.PrintCommunication = False
     With wsC.PageSetup
         .PrintArea = wsC.Range(wsC.Cells(1, 1), wsC.Cells(legendLastRow + 1, lastCol)).Address
+        .PrintTitleRows = wsC.Range(wsC.Rows(1), wsC.Rows(rowWeekday)).Address             ' 表題～日付の目盛り
+        .PrintTitleColumns = wsC.Range(wsC.Columns(1), wsC.Columns(labelCols)).Address   ' 目的・工区・工事
         .Orientation = xlLandscape
         .PaperSize = xlPaperA3
         .Zoom = False
-        .FitToPagesWide = 1
-        .FitToPagesTall = False
-        .CenterHorizontally = True
-        .LeftMargin = Application.CentimetersToPoints(1)
-        .RightMargin = Application.CentimetersToPoints(1)
-        .TopMargin = Application.CentimetersToPoints(1.2)
-        .BottomMargin = Application.CentimetersToPoints(1.2)
-        .CenterFooter = "&P / &N"
+        .FitToPagesWide = False         ' すべての行を1ページに印刷
+        .FitToPagesTall = 1
+        .CenterHorizontally = False
+        .LeftMargin = 0
+        .RightMargin = 0
+        .TopMargin = 0
+        .BottomMargin = 0
+        .HeaderMargin = 0
+        .FooterMargin = 0
+        .CenterFooter = ""              ' 余白が0なので、ページ番号は入れない（図に重なるため）
     End With
     Application.PrintCommunication = True
     On Error GoTo 0
