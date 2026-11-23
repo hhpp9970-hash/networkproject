@@ -1,6 +1,6 @@
 Attribute VB_Name = "NetworkSchedule"
 '==============================================================================
-'  ネットワーク工程表（横軸＝日程・縦軸＝工区・工事）自動作図マクロ  サンプル
+'  ネットワーク工程表（横軸＝日程・縦軸＝目的・工区・工事）自動作図マクロ  サンプル
 '
 '  「工程データ」シートの表から、次のシートを作り直して作図します。
 '    ・「全体工程」 … すべての作業。「まとめ」列があれば、まとめごとに1本の矢線にして
@@ -47,8 +47,10 @@ Attribute VB_Name = "NetworkSchedule"
 '    ・作図が終わったら、シートごとにかかった時間と図形の数を表示します
 '
 '  縦軸
-'    ・「工区」→「工事」の2段です（「工区」の列が無いか、すべて空欄なら「工事」だけ）
-'    ・並びは工程データに出てきた順です。工区が空欄の作業は「共通」にまとめます
+'    ・「目的」→「工区」→「工事」の3段です（「目的」「工区」の列が無いか、すべて空欄なら、その段は出しません）
+'    ・並びは目的 → 工区 → 工事の順で、どれも工程データに出てきた順です。同じ工区でも目的が違えば、
+'      それぞれの目的の中に分けて置きます
+'    ・目的・工区が空欄の作業は「共通」にまとめます
 '
 '  文字（ラベル）
 '    ・「表示名」の列に名前があれば、作業名の代わりにそれを書きます（セルの中の改行もそのまま）
@@ -76,7 +78,7 @@ Attribute VB_Name = "NetworkSchedule"
 '    ・余裕日数とクリティカルパスは全体で計算します（どのシートも同じ結果）
 '    ・期ごとのシートでは、他の期の作業とのつながりを、上の段「他の期から」・下の段
 '      「他の期へ」に点線の○で示します（ラベルは○の右に書き、重なるときは段を増やします）
-'    ・まとめは工区ごとに分けて、最初の作業の工区・工事の行に置きます。まとめの中で
+'    ・まとめは目的・工区ごとに分けて、最初の作業の目的・工区・工事の行に置きます。まとめの中で
 '      作業のない期間（待ち）は点線で描きます
 '    ・同じ日のダミーが途中の段の結合点を通ってしまうときは、結合点の横を通して描きます
 '
@@ -90,7 +92,7 @@ Private Const SETTING_SHEET As String = "設定"
 Private Const HOLIDAY_SHEET As String = "休工日"
 Private Const OVERALL_SHEET As String = "全体工程"
 Private Const DETAIL_SHEET As String = "詳細工程"
-Private Const COMMON_ZONE As String = "共通"         ' 工区が空欄の作業をまとめる工区名
+Private Const COMMON_ZONE As String = "共通"         ' 工区（目的）が空欄の作業をまとめる名前
 Private Const MARK_NAME As String = "NW_GENERATED"   ' マクロが作ったシートの目印（シート内の名前）
 Private Const CLICK_TAG As String = "NWCLICK"        ' クリックでつなぐ図形の目印（代替テキストの先頭）
 Private Const PICK_MARK As String = "NW_PICK"        ' 選んだ前の作業の目印の図形名
@@ -102,7 +104,8 @@ Private Const NODE_TAG As String = "NWNODE"          ' 動かせる○の目印�
 Private Const LABEL_COL_WIDTH As Double = 16    ' 工事名の列の幅
 Private Const DAY_COL_WIDTH As Double = 3.4     ' 日単位のときの1日分の列幅
 Private Const WEEK_COL_WIDTH As Double = 7      ' 週単位のときの1週分の列幅
-Private Const ZONE_COL_WIDTH As Double = 10     ' 工区名の列（A列）の幅（工区があるとき）
+Private Const ZONE_COL_WIDTH As Double = 10     ' 工区名の列の幅（工区があるとき）
+Private Const PURP_COL_WIDTH As Double = 12     ' 目的の列（A列）の幅（目的があるとき）
 Private Const LANE_HEIGHT As Double = 44        ' 1段の高さ（pt）
 Private Const ARROW_OFFSET As Double = 24       ' 段の上端から矢線までの距離（pt）
 Private Const NODE_D As Double = 12             ' 結合点（○）の直径（pt）
@@ -130,7 +133,7 @@ Private Const KIND_SUM As Long = 3              ' まとめ（全体工程）
 
 ' ---- 作業データ（全体） ----
 Private nAct As Long
-Private actKouji() As String, actPhase() As String, actGroup() As String, actZone() As String
+Private actKouji() As String, actPhase() As String, actGroup() As String, actZone() As String, actPurp() As String
 Private actId() As String, actName() As String, actDisp() As String, actCo() As String
 Private actDur() As Long, actDurKnown() As Boolean, actPredText() As String
 Private actStartIn() As Variant, actEndIn() As Variant, actProg() As Double, actRow() As Long
@@ -147,13 +150,15 @@ Private topo() As Long          ' 先行関係を守った並び順
 Private nPhase As Long, phaseName() As String, actPhaseIdx() As Long
 Private phaseMinS() As Long, phaseMaxF() As Long, phaseLastDay() As Long, phaseLevel() As Long
 
-' ---- 工区 ----
+' ---- 目的・工区 ----
 Private nZone As Long, zoneName() As String, actZoneIdx() As Long, useZones As Boolean
-Private pairRank As Object      ' "工区|工事" → 工程データに出てきた順
+Private nPurp As Long, purpName() As String, actPurpIdx() As Long, usePurps As Boolean
+Private pairRank As Object      ' "目的|工区|工事" → 工程データに出てきた順
 
 ' ---- まとめ ----
 Private nGroup As Long, actGroupIdx() As Long
-Private gName() As String, gKouji() As String, gZone() As Long, gS() As Long, gF() As Long, gCrit() As Boolean
+Private gName() As String, gKouji() As String, gZone() As Long, gPurp() As Long
+Private gS() As Long, gF() As Long, gCrit() As Boolean
 Private gCoLabel() As String, gCoName() As String, gProg() As Double
 
 ' ---- 会社の色・休工日 ----
@@ -166,8 +171,8 @@ Private itAct() As Long, itKind() As Long, itGroup() As Long, itS() As Long, itF
 Private actItem() As Long       ' 作業 → このシートの項目（0＝このシートに無い）
 Private ghostDict As Object     ' "種類|作業" → 項目
 Private nLink As Long, lkFrom() As Long, lkTo() As Long, lkA() As Long, lkB() As Long, lkCrit() As Boolean
-Private nBand As Long, bandName() As String, bandZone() As Long, bandFirstLane() As Long, bandLastLane() As Long
-Private zoneFirstLane() As Long, zoneLastLane() As Long
+Private nBand As Long, bandName() As String, bandZone() As Long, bandPurp() As Long
+Private bandFirstLane() As Long, bandLastLane() As Long, bandSeq() As Long   ' bandSeq：帯を上から並べた順
 Private nLane As Long, laneLastF() As Long, laneLastItem() As Long, laneOcc() As Collection
 ' ---- ラベルの置き方（LayoutLabels で決め、DrawItems で使う。位置は日付目盛りの左端からの pt）----
 Private lbNameTxt() As String, lbNameN() As Long, lbNameL() As Double, lbNameW() As Double, lbNameOff() As Double
@@ -186,7 +191,8 @@ Private sdFrom() As Long, sdTo() As Long, sdSlot() As Long
 Private wsC As Worksheet
 Private sheetMode As Long, isOverall As Boolean, useSummary As Boolean, sheetCaption As String
 Private viewStart As Long, viewEnd As Long, nCols As Long, daysPerCol As Long, dayW As Double
-Private labelCols As Long, dateCol As Long      ' 縦軸の列数（工区があれば2）と、日付目盛りの開始列
+Private labelCols As Long, dateCol As Long      ' 縦軸の列数（目的・工区・工事のうち使うもの）と、日付目盛りの開始列
+Private zoneCol As Long                         ' 工区の列（工区が無ければ 0）。目的があれば A列、工事は labelCols 列
 Private nPhaseRows As Long, rowMonth As Long, rowDay As Long, rowWeekday As Long, firstLaneRow As Long
 Private legendRow As Long, legendLastRow As Long, shapeSeq As Long
 Private lastShape As Shape      ' 最後に作った図形（クリックでつなぐ印を付けるため）
@@ -430,7 +436,7 @@ End Sub
 Private Function LoadData(ByVal ws As Worksheet) As Boolean
     Dim hdr As Long, r As Long, k As Long, lastRow As Long, v As Variant
     Dim cKouji As Long, cPhase As Long, cGroup As Long, cZone As Long, cId As Long, cName As Long, cCo As Long
-    Dim cDisp As Long
+    Dim cDisp As Long, cPurp As Long
     Dim cDur As Long, cPred As Long, cStart As Long, cEnd As Long, cProg As Long, cAS As Long, cAE As Long
 
     hdr = FindHeaderRow(ws, "作業ID")
@@ -442,6 +448,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     cPhase = FindCol(ws, hdr, "期")
     cGroup = FindCol(ws, hdr, "まとめ")
     cZone = FindCol(ws, hdr, "工区")
+    cPurp = FindCol(ws, hdr, "目的")
     cDisp = FindCol(ws, hdr, "表示名")
     cId = FindCol(ws, hdr, "作業ID")
     cName = FindCol(ws, hdr, "作業名")
@@ -469,6 +476,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
     End If
 
     ReDim actKouji(1 To nAct): ReDim actPhase(1 To nAct): ReDim actGroup(1 To nAct): ReDim actZone(1 To nAct)
+    ReDim actPurp(1 To nAct)
     ReDim actId(1 To nAct): ReDim actName(1 To nAct): ReDim actDisp(1 To nAct): ReDim actCo(1 To nAct)
     ReDim actDur(1 To nAct): ReDim actDurKnown(1 To nAct): ReDim actPredText(1 To nAct)
     ReDim actStartIn(1 To nAct): ReDim actEndIn(1 To nAct): ReDim actProg(1 To nAct): ReDim actRow(1 To nAct)
@@ -487,6 +495,7 @@ Private Function LoadData(ByVal ws As Worksheet) As Boolean
             If cPhase > 0 Then actPhase(k) = CellText(ws.Cells(r, cPhase).Value)
             If cGroup > 0 Then actGroup(k) = CellText(ws.Cells(r, cGroup).Value)
             If cZone > 0 Then actZone(k) = CellText(ws.Cells(r, cZone).Value)
+            If cPurp > 0 Then actPurp(k) = CellText(ws.Cells(r, cPurp).Value)
             actName(k) = CellText(ws.Cells(r, cName).Value)
             If cDisp > 0 Then actDisp(k) = CellText(ws.Cells(r, cDisp).Value)
             If cCo > 0 Then actCo(k) = CellText(ws.Cells(r, cCo).Value)
@@ -773,17 +782,22 @@ Private Sub CollectPhases()
     Next i
 End Sub
 
-' 工区の一覧（工程データに出てきた順。空欄は「共通」）と、工区・工事の組の順位（出てきた順）
+' 工区と目的の一覧（工程データに出てきた順。空欄は「共通」）と、目的・工区・工事の組の順位（出てきた順）
 Private Sub CollectZones()
-    Dim dict As Object, i As Long, z As String, kk As String
+    Dim dict As Object, pDict As Object, i As Long, z As String, kk As String
 
     Set dict = CreateObject("Scripting.Dictionary")
+    Set pDict = CreateObject("Scripting.Dictionary")
     Set pairRank = CreateObject("Scripting.Dictionary")
     nZone = 0
+    nPurp = 0
     useZones = False
+    usePurps = False
     ReDim actZoneIdx(1 To nAct): ReDim zoneName(1 To nAct)
+    ReDim actPurpIdx(1 To nAct): ReDim purpName(1 To nAct)
     For i = 1 To nAct
         If Len(actZone(i)) > 0 Then useZones = True
+        If Len(actPurp(i)) > 0 Then usePurps = True
     Next i
     For i = 1 To nAct
         z = actZone(i)
@@ -794,12 +808,20 @@ Private Sub CollectZones()
             zoneName(nZone) = z
         End If
         actZoneIdx(i) = dict(z)
-        kk = actZoneIdx(i) & "|" & actKouji(i)
+        z = actPurp(i)
+        If Len(z) = 0 Then z = COMMON_ZONE
+        If Not pDict.Exists(z) Then
+            nPurp = nPurp + 1
+            pDict.Add z, nPurp
+            purpName(nPurp) = z
+        End If
+        actPurpIdx(i) = pDict(z)
+        kk = actPurpIdx(i) & "|" & actZoneIdx(i) & "|" & actKouji(i)
         If Not pairRank.Exists(kk) Then pairRank.Add kk, pairRank.Count + 1
     Next i
 End Sub
 
-' まとめ（入れ子）の一覧と、まとめごとの期間・会社・進捗（同じ名前でも工区が違えば別のまとめ）
+' まとめ（入れ子）の一覧と、まとめごとの期間・会社・進捗（同じ名前でも目的か工区が違えば別のまとめ）
 Private Sub CollectGroups()
     Dim dict As Object, coSet As Object, i As Long, g As Long, wsum As Double, psum As Double, key As String
 
@@ -808,16 +830,17 @@ Private Sub CollectGroups()
     ReDim actGroupIdx(1 To nAct)
     ReDim gName(1 To nAct): ReDim gKouji(1 To nAct): ReDim gS(1 To nAct): ReDim gF(1 To nAct)
     ReDim gCrit(1 To nAct): ReDim gCoLabel(1 To nAct): ReDim gCoName(1 To nAct): ReDim gProg(1 To nAct)
-    ReDim gZone(1 To nAct)
+    ReDim gZone(1 To nAct): ReDim gPurp(1 To nAct)
     For i = 1 To nAct
         If Len(actGroup(i)) > 0 Then
-            key = actZoneIdx(i) & "|" & actGroup(i)
+            key = actPurpIdx(i) & "|" & actZoneIdx(i) & "|" & actGroup(i)
             If Not dict.Exists(key) Then
                 nGroup = nGroup + 1
                 dict.Add key, nGroup
                 gName(nGroup) = actGroup(i)
                 gKouji(nGroup) = actKouji(i)
                 gZone(nGroup) = actZoneIdx(i)
+                gPurp(nGroup) = actPurpIdx(i)
                 gS(nGroup) = actS(i)
                 gF(nGroup) = actF(i)
             End If
@@ -1210,48 +1233,51 @@ End Sub
 '==============================================================================
 '  段の割り当てと結合点
 '==============================================================================
-' 工区・工事ごとに（並びは工区の順 → 工程データに出てきた順）、開始日の早い順に段へ置く。
+' 目的・工区・工事ごとに（並びは目的の順 → 工区の順 → 工程データに出てきた順）、開始日の早い順に段へ置く。
 ' 重なる項目は段を分ける。
 ' 前の項目の終点と次の項目の始点が同じ日でも、その2つが直接つながっていなければ結合点を共有しない。
 ' 期のシートでは、いちばん上に「他の期から」、いちばん下に「他の期へ」の段を置く
 ' （他の期の作業のラベルが重なるときは、その中で段を増やす）。
 Private Sub AssignLanes()
     Dim bandDict As Object, itBand() As Long, members() As Long, kk As String
-    Dim bandRank() As Long, bandOrd() As Long, bi As Long, z As Long
+    Dim bandKey() As Double, bi As Long
     Dim k As Long, b As Long, m As Long, j As Long, L As Long, cnt As Long, n As Long
     Dim placed As Boolean
 
     Set bandDict = CreateObject("Scripting.Dictionary")
-    ReDim bandName(1 To nItem): ReDim bandZone(1 To nItem): ReDim bandRank(1 To nItem)
-    ReDim bandOrd(1 To nItem): ReDim itBand(1 To nItem)
+    ReDim bandName(1 To nItem): ReDim bandZone(1 To nItem): ReDim bandPurp(1 To nItem): ReDim bandKey(1 To nItem)
+    ReDim bandSeq(1 To nItem): ReDim itBand(1 To nItem)
     nBand = 0
     For k = 1 To nItem
         If itKind(k) = KIND_ACT Or itKind(k) = KIND_SUM Then
-            kk = ItemZone(k) & "|" & ItemKouji(k)
+            kk = ItemPurp(k) & "|" & ItemZone(k) & "|" & ItemKouji(k)
             If Not bandDict.Exists(kk) Then
                 nBand = nBand + 1
                 bandDict.Add kk, nBand
                 bandName(nBand) = ItemKouji(k)
                 bandZone(nBand) = ItemZone(k)
-                bandRank(nBand) = pairRank(kk)
+                bandPurp(nBand) = ItemPurp(k)
+                ' 並べる順の値：目的の順 → 工区の順 → 目的・工区・工事の組が工程データに出てきた順
+                bandKey(nBand) = (CDbl(bandPurp(nBand)) * (nZone + 1) + bandZone(nBand)) * (pairRank.Count + 1) _
+                                 + pairRank(kk)
             End If
             itBand(k) = bandDict(kk)
         End If
     Next k
 
-    ' 帯（工区・工事）の並び：工区の順 → 工程データに出てきた順
+    ' 帯（目的・工区・工事）の並び
     For b = 1 To nBand
         m = b
         Do While m > 1
-            j = bandOrd(m - 1)
-            If bandZone(b) < bandZone(j) Or (bandZone(b) = bandZone(j) And bandRank(b) < bandRank(j)) Then
-                bandOrd(m) = j
+            j = bandSeq(m - 1)
+            If bandKey(b) < bandKey(j) Then
+                bandSeq(m) = j
                 m = m - 1
             Else
                 Exit Do
             End If
         Loop
-        bandOrd(m) = b
+        bandSeq(m) = b
     Next b
 
     ReDim bandFirstLane(1 To nBand): ReDim bandLastLane(1 To nBand)
@@ -1273,7 +1299,7 @@ Private Sub AssignLanes()
     End If
 
     For bi = 1 To nBand
-        b = bandOrd(bi)
+        b = bandSeq(bi)
         cnt = 0
         For k = 1 To nItem
             If itKind(k) = KIND_ACT Or itKind(k) = KIND_SUM Then
@@ -1322,14 +1348,6 @@ Private Sub AssignLanes()
         Next m
         bandLastLane(b) = nLane
     Next bi
-
-    ' 工区ごとの段の範囲（縦軸の工区の列）。このシートに作業のない工区は 0 のまま
-    ReDim zoneFirstLane(1 To nZone): ReDim zoneLastLane(1 To nZone)
-    For b = 1 To nBand
-        z = bandZone(b)
-        If zoneFirstLane(z) = 0 Or bandFirstLane(b) < zoneFirstLane(z) Then zoneFirstLane(z) = bandFirstLane(b)
-        If bandLastLane(b) > zoneLastLane(z) Then zoneLastLane(z) = bandLastLane(b)
-    Next b
 
     ' 他の期へ（いちばん下）
     ghostToFirst = 0
@@ -1501,6 +1519,10 @@ End Function
 
 Private Function ItemZone(ByVal k As Long) As Long
     If itKind(k) = KIND_SUM Then ItemZone = gZone(itGroup(k)) Else ItemZone = actZoneIdx(itAct(k))
+End Function
+
+Private Function ItemPurp(ByVal k As Long) As Long
+    If itKind(k) = KIND_SUM Then ItemPurp = gPurp(itGroup(k)) Else ItemPurp = actPurpIdx(itAct(k))
 End Function
 
 Private Function ItemColor(ByVal k As Long) As Long
@@ -1708,15 +1730,15 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
         .Font.Size = 9
         .VerticalAlignment = xlCenter
     End With
-    ' 縦軸の列：工区があれば A列＝工区・B列＝工事、無ければ A列＝工事
-    If useZones Then
-        labelCols = 2
-        wsC.Columns(1).ColumnWidth = ZONE_COL_WIDTH
-        wsC.Columns(2).ColumnWidth = LABEL_COL_WIDTH
-    Else
-        labelCols = 1
-        wsC.Columns(1).ColumnWidth = LABEL_COL_WIDTH
-    End If
+    ' 縦軸の列：左から目的・工区・工事（目的・工区が無ければ、その列は作らない）
+    labelCols = 1
+    If usePurps Then labelCols = labelCols + 1
+    If useZones Then labelCols = labelCols + 1
+    zoneCol = 0
+    If useZones Then zoneCol = labelCols - 1
+    If usePurps Then wsC.Columns(1).ColumnWidth = PURP_COL_WIDTH
+    If useZones Then wsC.Columns(zoneCol).ColumnWidth = ZONE_COL_WIDTH
+    wsC.Columns(labelCols).ColumnWidth = LABEL_COL_WIDTH
     dateCol = labelCols + 1
     SetDateColumns
     dayW = wsC.Cells(1, dateCol).Width / daysPerCol      ' 1日分の幅（pt）
@@ -1783,7 +1805,8 @@ End Function
 ' 表題・日付目盛り・網掛け（土日・休工日）・工事名
 Private Sub DrawGrid()
     Dim c As Long, d As Long, col As Long, lastCol As Long, lastLaneRow As Long
-    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean, z As Long
+    Dim b As Long, r1 As Long, r2 As Long, prevMonth As Long, wd As Long, hasHol As Boolean
+    Dim bi As Long, b1 As Long, runEnd As Boolean
     Dim sv As Variant, txt As String, created As Variant
     Dim vMon() As Variant, vDay() As Variant, vWk() As Variant, clr As Long, runClr As Long, runCol As Long
 
@@ -1800,12 +1823,9 @@ Private Sub DrawGrid()
     End With
 
     ' 日付目盛りと網掛け
-    If useZones Then
-        wsC.Cells(rowDay, 1).Value = "工区"
-        wsC.Cells(rowDay, 2).Value = "工事"
-    Else
-        wsC.Cells(rowDay, 1).Value = "工事"
-    End If
+    If usePurps Then wsC.Cells(rowDay, 1).Value = "目的"
+    If useZones Then wsC.Cells(rowDay, zoneCol).Value = "工区"
+    wsC.Cells(rowDay, labelCols).Value = "工事"
     ' 日（週）の境目の罫線：薄い灰色の細線。結合点（○）はこの線の上に乗る（列ごとではなく、まとめて引く）
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(lastLaneRow, lastCol)).Borders(xlInsideVertical)
         .LineStyle = xlContinuous
@@ -1889,7 +1909,7 @@ Private Sub DrawGrid()
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
 
-    ' 工事名（縦軸。工区があるときはB列）
+    ' 工事名（縦軸のいちばん右の列）
     For b = 1 To nBand
         r1 = firstLaneRow + bandFirstLane(b) - 1
         r2 = firstLaneRow + bandLastLane(b) - 1
@@ -1906,35 +1926,70 @@ Private Sub DrawGrid()
             .Color = RGB(191, 191, 191)
         End With
     Next b
-    ' 工区名（A列。工区の段をまとめて塗り、工区の境目は太線）
+    ' 工区名と目的：上下に続く帯の段をまとめて塗る。境目の線は工区が太線、目的はもっと太い線
+    ' （工区は目的の中で分ける。同じ工区でも目的が違えば別の欄。線が重なる目的の境目は、あとから引いて上書きする）
     If useZones Then
-        For z = 1 To nZone
-            If zoneFirstLane(z) > 0 Then
-                r1 = firstLaneRow + zoneFirstLane(z) - 1
-                r2 = firstLaneRow + zoneLastLane(z) - 1
-                With wsC.Range(wsC.Cells(r1, 1), wsC.Cells(r2, 1))
-                    If r2 > r1 Then .Merge
-                    .WrapText = True
-                    .HorizontalAlignment = xlCenter
-                    .VerticalAlignment = xlCenter
-                    .Font.Bold = True
-                    .Interior.Color = RGB(237, 242, 249)
-                    With .Borders(xlEdgeRight)
-                        .LineStyle = xlContinuous
-                        .Color = RGB(191, 191, 191)
-                    End With
-                End With
-                wsC.Cells(r1, 1).Value = "'" & zoneName(z)
-                With wsC.Range(wsC.Cells(r2, 1), wsC.Cells(r2, lastCol)).Borders(xlEdgeBottom)
-                    .LineStyle = xlContinuous
-                    .Weight = xlMedium
-                    .Color = RGB(89, 89, 89)
-                End With
+        b1 = 1
+        For bi = 1 To nBand
+            b = bandSeq(bi)
+            If bi = nBand Then
+                runEnd = True
+            Else
+                runEnd = (bandZone(bandSeq(bi + 1)) <> bandZone(b) Or bandPurp(bandSeq(bi + 1)) <> bandPurp(b))
             End If
-        Next z
+            If runEnd Then
+                LabelRun zoneCol, bandFirstLane(bandSeq(b1)), bandLastLane(b), zoneName(bandZone(b)), _
+                         RGB(237, 242, 249), RGB(0, 0, 0), xlMedium, RGB(89, 89, 89), lastCol
+                b1 = bi + 1
+            End If
+        Next bi
+    End If
+    If usePurps Then
+        b1 = 1
+        For bi = 1 To nBand
+            b = bandSeq(bi)
+            If bi = nBand Then
+                runEnd = True
+            Else
+                runEnd = (bandPurp(bandSeq(bi + 1)) <> bandPurp(b))
+            End If
+            If runEnd Then
+                LabelRun 1, bandFirstLane(bandSeq(b1)), bandLastLane(b), purpName(bandPurp(b)), _
+                         RGB(217, 225, 242), RGB(31, 56, 100), xlThick, RGB(64, 64, 64), lastCol
+                b1 = bi + 1
+            End If
+        Next bi
     End If
     If ghostFromFirst > 0 Then LabelGhostLanes ghostFromFirst, ghostFromLast, "他の期から", lastCol
     If ghostToFirst > 0 Then LabelGhostLanes ghostToFirst, ghostToLast, "他の期へ", lastCol
+End Sub
+
+' 縦軸の工区・目的の欄：col 列の段 L1～L2 を結合して塗り、名前を書き、欄の下に境目の線を引く（col 列から右端まで）
+Private Sub LabelRun(ByVal col As Long, ByVal L1 As Long, ByVal L2 As Long, ByVal txt As String, _
+                     ByVal fillClr As Long, ByVal txtClr As Long, ByVal lineWt As Long, ByVal lineClr As Long, _
+                     ByVal lastCol As Long)
+    Dim r1 As Long, r2 As Long
+    r1 = firstLaneRow + L1 - 1
+    r2 = firstLaneRow + L2 - 1
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(r2, col))
+        If r2 > r1 Then .Merge
+        .WrapText = True
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .Font.Bold = True
+        .Font.Color = txtClr
+        .Interior.Color = fillClr
+        With .Borders(xlEdgeRight)
+            .LineStyle = xlContinuous
+            .Color = RGB(191, 191, 191)
+        End With
+    End With
+    wsC.Cells(r1, col).Value = "'" & txt          ' 「1-2」などが日付にならないよう文字列で
+    With wsC.Range(wsC.Cells(r2, col), wsC.Cells(r2, lastCol)).Borders(xlEdgeBottom)
+        .LineStyle = xlContinuous
+        .Weight = lineWt
+        .Color = lineClr
+    End With
 End Sub
 
 Private Sub LabelGhostLanes(ByVal L1 As Long, ByVal L2 As Long, ByVal txt As String, ByVal lastCol As Long)
