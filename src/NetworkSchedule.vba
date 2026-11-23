@@ -43,7 +43,7 @@ Attribute VB_Name = "NetworkSchedule"
 '  大きな工程表（重さ）
 '    ・作図中はステータスバー（画面のいちばん下）に進み具合を出します。Esc キーで中止できます
 '    ・目盛りの「自動」（空欄も同じ）は、期間が半年までのシートは日単位、それより長いシートは週単位にします。
-'      全体工程は「日」にしていても、期間が2年を超えると週単位で描きます（列が多すぎて重くなるため）。
+'      全体工程は「日」にしていても、期間が2年を超えると週単位で描きます（横に長くなりすぎて読めないため）。
 '      期ごとのシートと「詳細工程」は、「日」にすれば長くても日単位で描きます
 '    ・作図が終わったら、シートごとにかかった時間と図形の数を表示します
 '
@@ -61,9 +61,9 @@ Attribute VB_Name = "NetworkSchedule"
 '    ・マイルストーン（日数0）は、○の横（矢線の高さ）に「作業ID 名前（会社）」と1行で書きます
 '
 '  目盛り
-'    ・週単位の列は月曜始まりです。日付の行に月曜の日付、曜日の行に「月」を書きます
-'    ・日（週単位のときは週）の境目に薄い縦線を引きます。結合点（○）はこの線の上に乗ります
-'      （線の右の日に始まり、左の日に終わる点）
+'    ・日の境目に薄い縦線を引きます。結合点（○）はこの線の上に乗ります（線の右の日に始まり、左の日に終わる点）
+'    ・週単位の目盛りでも列は1日ずつ（細い列）で、週の境目（月曜）を実線、日の境目を点線にします。
+'      日付の行には月曜の日付を書きます。○が何日にあるかは、月曜の線から点線を数えて読みます
 '
 '  色と記号
 '    ・矢線と文字は会社ごとの色です。「設定」の「会社の色」の表で、会社名の右のセル（B列）の
@@ -105,14 +105,14 @@ Private Const NODE_TAG As String = "NWNODE"          ' 動かせる○の目印�
 ' ---- レイアウト ----
 Private Const LABEL_COL_WIDTH As Double = 16    ' 工事名の列の幅
 Private Const DAY_COL_WIDTH As Double = 3.4     ' 日単位のときの1日分の列幅
-Private Const WEEK_COL_WIDTH As Double = 7      ' 週単位のときの1週分の列幅
+Private Const WEEK_DAY_COL_WIDTH As Double = 0.7 ' 週単位のときの1日分の列幅（1週でおよそ7文字分）
 Private Const ZONE_COL_WIDTH As Double = 10     ' 工区名の列の幅（工区があるとき）
 Private Const PURP_COL_WIDTH As Double = 12     ' 目的の列（A列）の幅（目的があるとき）
 Private Const LANE_HEIGHT As Double = 44        ' 1段の高さ（pt）
 Private Const ARROW_OFFSET As Double = 24       ' 段の上端から矢線までの距離（pt）
 Private Const NODE_D As Double = 12             ' 結合点（○）の直径（pt）
 Private Const MIN_DAY_COLS As Long = 40         ' 日単位の最小列数（凡例が収まる幅）
-Private Const MIN_WEEK_COLS As Long = 18        ' 週単位の最小列数
+Private Const MIN_WEEK_COLS As Long = 18        ' 週単位の最小の週数
 Private Const AUTO_DAY_SPAN As Long = 184       ' 目盛りが「自動」のとき、日単位にする期間の上限（日）
 Private Const MAX_DAY_SPAN As Long = 731        ' 「日」にしていても、これより長い期間は週単位にする（日）
 Private Const NAME_FONT As Double = 8           ' 矢線の上（作業ID・作業名）の文字サイズ
@@ -192,7 +192,8 @@ Private sdFrom() As Long, sdTo() As Long, sdSlot() As Long
 ' ---- 描画 ----
 Private wsC As Worksheet
 Private sheetMode As Long, isOverall As Boolean, useSummary As Boolean, sheetCaption As String
-Private viewStart As Long, viewEnd As Long, nCols As Long, daysPerCol As Long, dayW As Double
+Private viewStart As Long, viewEnd As Long, nCols As Long, dayW As Double
+Private weekScale As Boolean    ' 週単位の目盛り（列は1日ずつのまま細くし、週の境目を実線・日の境目を点線にする）
 Private labelCols As Long, dateCol As Long      ' 縦軸の列数（目的・工区・工事のうち使うもの）と、日付目盛りの開始列
 Private zoneCol As Long                         ' 工区の列（工区が無ければ 0）。目的があれば A列、工事は labelCols 列
 Private nPhaseRows As Long, rowMonth As Long, rowDay As Long, rowWeekday As Long, firstLaneRow As Long
@@ -1097,26 +1098,24 @@ Private Sub SetViewRange()
     viewEnd = maxF + 2
 
     ' 目盛り：「週」「日」「自動」（空欄も自動）。自動は期間が AUTO_DAY_SPAN 日までなら日単位。
-    ' 全体工程は「日」でも期間が MAX_DAY_SPAN 日を超えるときは、列が多すぎて重くなるので週単位にする
+    ' 全体工程は「日」でも期間が MAX_DAY_SPAN 日を超えるときは、横に長くなりすぎるので週単位にする
     ' （期のシート・詳細工程は「日」なら、長くても日単位のまま）
     If isOverall Then sv = GetSettingValue("全体の目盛り") Else sv = GetSettingValue("期ごとの目盛り")
     If Len(CellText(sv)) = 0 Then sv = GetSettingValue("目盛り")
     sc = CellText(sv)
+    weekScale = False
     If InStr(sc, "週") > 0 Then
-        daysPerCol = 7
+        weekScale = True
     ElseIf InStr(sc, "日") > 0 Then
-        daysPerCol = 1
         If isOverall And viewEnd - viewStart > MAX_DAY_SPAN Then
-            daysPerCol = 7
+            weekScale = True
             If Len(autoWeekNote) > 0 Then autoWeekNote = autoWeekNote & "・"
             autoWeekNote = autoWeekNote & "「" & curSheetName & "」"
         End If
     ElseIf AutoSpan() > AUTO_DAY_SPAN Then
-        daysPerCol = 7
-    Else
-        daysPerCol = 1
+        weekScale = True
     End If
-    If daysPerCol = 7 Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)
+    If weekScale Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)   ' 月曜から
 End Sub
 
 ' 目盛りが「自動」のときに見る期間。期のシートは、どの期も同じ目盛りになるよう一番長い期で決める
@@ -1724,9 +1723,12 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     rowWeekday = rowMonth + 2
     firstLaneRow = rowMonth + 3
 
-    nCols = (viewEnd - viewStart) \ daysPerCol + 1
-    If daysPerCol = 1 And nCols < MIN_DAY_COLS Then nCols = MIN_DAY_COLS
-    If daysPerCol = 7 And nCols < MIN_WEEK_COLS Then nCols = MIN_WEEK_COLS
+    nCols = viewEnd - viewStart + 1                 ' 日付の列は1日1列（週単位も）
+    If weekScale Then
+        nCols = WholeWeeks(MaxL(nCols, MIN_WEEK_COLS * 7))
+    ElseIf nCols < MIN_DAY_COLS Then
+        nCols = MIN_DAY_COLS
+    End If
 
     With wsC.Cells
         .Font.Name = "游ゴシック"
@@ -1744,19 +1746,24 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     wsC.Columns(labelCols).ColumnWidth = LABEL_COL_WIDTH
     dateCol = labelCols + 1
     SetDateColumns
-    dayW = wsC.Cells(1, dateCol).Width / daysPerCol      ' 1日分の幅（pt）
+    dayW = wsC.Cells(1, dateCol).Width                  ' 1日分の幅（pt）
 End Sub
 
 Private Sub SetDateColumns()
     wsC.Range(wsC.Columns(dateCol), wsC.Columns(dateCol + nCols - 1)).ColumnWidth = _
-        IIf(daysPerCol = 1, DAY_COL_WIDTH, WEEK_COL_WIDTH)
+        IIf(weekScale, WEEK_DAY_COL_WIDTH, DAY_COL_WIDTH)
     xCacheOK = False
 End Sub
+
+' 週単位のときは、日付の列の数を週の切れ目（7日ごと）にそろえる
+Private Function WholeWeeks(ByVal n As Long) As Long
+    If weekScale Then WholeWeeks = ((n + 6) \ 7) * 7 Else WholeWeeks = n
+End Function
 
 ' ラベルが右端からはみ出さないよう、必要なら日付の列を足す
 Private Sub FitColumns()
     Dim needCols As Long
-    needCols = Int(LayoutLabels() / daysPerCol) + 2
+    needCols = WholeWeeks(Int(LayoutLabels()) + 2)
     If needCols > nCols Then
         nCols = needCols
         SetDateColumns
@@ -1829,17 +1836,19 @@ Private Sub DrawGrid()
     If usePurps Then wsC.Cells(rowDay, 1).Value = "目的"
     If useZones Then wsC.Cells(rowDay, zoneCol).Value = "工区"
     wsC.Cells(rowDay, labelCols).Value = "工事"
-    ' 日（週）の境目の罫線：薄い灰色の細線。結合点（○）はこの線の上に乗る（列ごとではなく、まとめて引く）
+    ' 日の境目の罫線：日単位は薄い灰色の細線、週単位は点線（週の境目は下で実線にする）。結合点（○）はこの線の上に乗る
+    ' （列ごとではなく、まとめて引く）
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(lastLaneRow, lastCol)).Borders(xlInsideVertical)
-        .LineStyle = xlContinuous
+        .LineStyle = IIf(weekScale, xlDot, xlContinuous)
         .Weight = xlThin
-        .Color = RGB(217, 217, 217)
+        .Color = IIf(weekScale, RGB(191, 191, 191), RGB(217, 217, 217))
     End With
     ' 目盛りの文字は配列にためて1回で書き、網掛けは同じ色が続く列をまとめて塗る
     ReDim vMon(1 To 1, 1 To nCols): ReDim vDay(1 To 1, 1 To nCols): ReDim vWk(1 To 1, 1 To nCols)
     For c = 0 To nCols - 1
-        d = viewStart + c * daysPerCol
+        d = viewStart + c
         col = dateCol + c
+        wd = Weekday(CDate(d), vbSunday)
         If c = 0 Or Month(CDate(d)) <> prevMonth Then
             vMon(1, c + 1) = "'" & Format(CDate(d), "yyyy/m")
             If c > 0 Then       ' 月の境目の濃い線（最初の列の左は、あとでまとめて引く）
@@ -1849,10 +1858,17 @@ Private Sub DrawGrid()
                 End With
             End If
             prevMonth = Month(CDate(d))
+        ElseIf weekScale And wd = vbMonday Then        ' 週の境目（月曜の左）の実線
+            With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(lastLaneRow, col)).Borders(xlEdgeLeft)
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+                .Color = RGB(166, 166, 166)
+            End With
         End If
         clr = 0
-        If daysPerCol = 1 Then
-            wd = Weekday(CDate(d), vbSunday)
+        If weekScale Then
+            If wd = vbMonday Then vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")   ' 週の初め（月曜）の日付
+        Else
             vDay(1, c + 1) = Day(CDate(d))
             vWk(1, c + 1) = Mid$("日月火水木金土", wd, 1)
             If IsHoliday(d) Then
@@ -1862,9 +1878,6 @@ Private Sub DrawGrid()
                 clr = RGB(242, 242, 242)
             End If
             If wd = vbSunday Then wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
-        Else
-            vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")
-            vWk(1, c + 1) = Mid$("日月火水木金土", Weekday(CDate(d), vbSunday), 1)   ' 週の初めの日（月曜）の曜日
         End If
         If clr <> runClr Then
             If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, col - 1)).Interior.Color = runClr
@@ -1875,15 +1888,12 @@ Private Sub DrawGrid()
     If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, lastCol)).Interior.Color = runClr
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Value = vMon
     wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowDay, lastCol)).Value = vDay
-    wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
+    If Not weekScale Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
     If showProg Then
-        If progT >= viewStart And progT < viewStart + nCols * daysPerCol Then
-            c = (progT - viewStart) \ daysPerCol
-            MarkStatusDay dateCol + c, viewStart + c * daysPerCol
-        End If
+        If progT >= viewStart And progT < viewStart + nCols Then MarkStatusDay dateCol + progT - viewStart
     End If
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowWeekday, lastCol))
-        .HorizontalAlignment = xlCenter
+        .HorizontalAlignment = IIf(weekScale, xlLeft, xlCenter)     ' 週単位の日付は月曜の列から右へはみ出して書く
         .Font.Size = 8
     End With
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Font.Size = 8
@@ -1902,15 +1912,15 @@ Private Sub DrawGrid()
     If Not IsDate(created) Then created = Date
     txt = ""
     If Len(CellText(sv)) > 0 Then txt = "第" & CellText(sv) & "版　"
-    txt = txt & "作成日：" & Format(created, "yyyy/mm/dd") & "　目盛り：" & IIf(daysPerCol = 1, "日", "週") & "単位"
-    If daysPerCol = 1 Then
+    txt = txt & "作成日：" & Format(created, "yyyy/mm/dd") & "　目盛り：" & IIf(weekScale, "週", "日") & "単位"
+    If Not weekScale Then
         If hasHol Then
             txt = txt & "（網掛け：灰色＝土日、赤＝休工日）"
         Else
             txt = txt & "（網掛けは土日）"
         End If
     Else
-        txt = txt & "（月曜始まり）"
+        txt = txt & "（月曜始まり。点線は日の区切り）"
     End If
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
@@ -2954,17 +2964,15 @@ End Sub
 '==============================================================================
 '  図形を描く部品
 '==============================================================================
-' 日 d の左端の x 座標。日付の列はすべて同じ幅なので、最初の列の位置と幅を一度だけ読んで計算する
+' 日 d の左端の x 座標。日付の列は1日1列ですべて同じ幅なので、最初の列の位置と幅を一度だけ読んで計算する
 ' （毎回セルに問い合わせると、項目が多いときに遅い）
 Private Function XOf(ByVal d As Long) As Double
-    Dim off As Long
     If Not xCacheOK Then
         xLeft0 = wsC.Cells(rowDay, dateCol).Left
         xColW = wsC.Cells(rowDay, dateCol).Width
         xCacheOK = True
     End If
-    off = d - viewStart
-    XOf = xLeft0 + (off \ daysPerCol) * xColW + xColW * ((off Mod daysPerCol) / daysPerCol)
+    XOf = xLeft0 + (d - viewStart) * xColW
 End Function
 
 ' 段 L の矢線の y 座標（段の行の上端は、行の高さを決めたあとに一度だけ読む）
@@ -4343,10 +4351,11 @@ Private Sub WriteProgressCols(ByVal ws As Worksheet, ByVal hdr As Long, ByVal la
     ws.Range(ws.Cells(hdr + 1, c(4)), ws.Cells(lastRow, c(4))).NumberFormat = "[Red]0""日遅れ"";[Blue]0""日早い"";""－"""
 End Sub
 
-' 基準日の列（週単位ならその週）の目盛りに印を付ける
-Private Sub MarkStatusDay(ByVal col As Long, ByVal d As Long)
-    If progT < d Or progT >= d + daysPerCol Then Exit Sub
-    With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(rowWeekday, col))
+' 基準日の列の目盛りに印を付ける（週単位は、日付の行に月曜の日付を書くので、その下の行だけ）
+Private Sub MarkStatusDay(ByVal col As Long)
+    Dim r1 As Long
+    If weekScale Then r1 = rowWeekday Else r1 = rowDay
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(rowWeekday, col))
         .Interior.Color = PROG_COLOR
         .Font.Color = RGB(255, 255, 255)
         .Font.Bold = True
@@ -4368,7 +4377,7 @@ End Sub
 ' 凡例のイナズマ線（イナズマ線を描いたシートだけ）
 Private Sub LegendProgress(ByRef x As Double, ByVal y As Double)
     Dim txt As String
-    If progTb < viewStart Or progTb > viewStart + nCols * daysPerCol Then Exit Sub
+    If progTb < viewStart Or progTb > viewStart + nCols Then Exit Sub
     DrawZigzag x, y
     txt = "イナズマ線（" & DateMD(progT) & "の作業終了時点の進み・遅れ）"
     AddText x + 42, y, txt, 8, RGB(0, 0, 0), False, 2
@@ -4383,7 +4392,7 @@ Private Sub DrawProgressLine()
 
     If Not showProg Then Exit Sub
     lo = viewStart
-    hi = viewStart + nCols * daysPerCol
+    hi = viewStart + nCols
     If progTb < lo Or progTb > hi Then Exit Sub
     xT = XOfDay(progTb)
     Set fb = wsC.Shapes.BuildFreeform(msoEditingAuto, xT, wsC.Cells(firstLaneRow, 1).Top)

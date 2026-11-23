@@ -43,7 +43,7 @@ Attribute VB_Name = "NetworkSchedule"
 '  ‘å‚«‚ÈH’ö•\id‚³j
 '    Eì}’†‚ÍƒXƒe[ƒ^ƒXƒo[i‰æ–Ê‚Ì‚¢‚¿‚Î‚ñ‰ºj‚Éi‚İ‹ï‡‚ğo‚µ‚Ü‚·BEsc ƒL[‚Å’†~‚Å‚«‚Ü‚·
 '    E–Ú·‚è‚Ìu©“®vi‹ó—“‚à“¯‚¶j‚ÍAŠúŠÔ‚ª”¼”N‚Ü‚Å‚ÌƒV[ƒg‚Í“ú’PˆÊA‚»‚ê‚æ‚è’·‚¢ƒV[ƒg‚ÍT’PˆÊ‚É‚µ‚Ü‚·B
-'      ‘S‘ÌH’ö‚Íu“úv‚É‚µ‚Ä‚¢‚Ä‚àAŠúŠÔ‚ª2”N‚ğ’´‚¦‚é‚ÆT’PˆÊ‚Å•`‚«‚Ü‚·i—ñ‚ª‘½‚·‚¬‚Äd‚­‚È‚é‚½‚ßjB
+'      ‘S‘ÌH’ö‚Íu“úv‚É‚µ‚Ä‚¢‚Ä‚àAŠúŠÔ‚ª2”N‚ğ’´‚¦‚é‚ÆT’PˆÊ‚Å•`‚«‚Ü‚·i‰¡‚É’·‚­‚È‚è‚·‚¬‚Ä“Ç‚ß‚È‚¢‚½‚ßjB
 '      Šú‚²‚Æ‚ÌƒV[ƒg‚ÆuÚ×H’öv‚ÍAu“úv‚É‚·‚ê‚Î’·‚­‚Ä‚à“ú’PˆÊ‚Å•`‚«‚Ü‚·
 '    Eì}‚ªI‚í‚Á‚½‚çAƒV[ƒg‚²‚Æ‚É‚©‚©‚Á‚½ŠÔ‚Æ}Œ`‚Ì”‚ğ•\¦‚µ‚Ü‚·
 '
@@ -61,9 +61,9 @@ Attribute VB_Name = "NetworkSchedule"
 '    Eƒ}ƒCƒ‹ƒXƒg[ƒ“i“ú”0j‚ÍA›‚Ì‰¡i–îü‚Ì‚‚³j‚Éuì‹ÆID –¼‘Oi‰ïĞjv‚Æ1s‚Å‘‚«‚Ü‚·
 '
 '  –Ú·‚è
-'    ET’PˆÊ‚Ì—ñ‚ÍŒ—jn‚Ü‚è‚Å‚·B“ú•t‚Ìs‚ÉŒ—j‚Ì“ú•tA—j“ú‚Ìs‚ÉuŒv‚ğ‘‚«‚Ü‚·
-'    E“úiT’PˆÊ‚Ì‚Æ‚«‚ÍTj‚Ì‹«–Ú‚É”–‚¢cü‚ğˆø‚«‚Ü‚·BŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚è‚Ü‚·
-'      iü‚Ì‰E‚Ì“ú‚Én‚Ü‚èA¶‚Ì“ú‚ÉI‚í‚é“_j
+'    E“ú‚Ì‹«–Ú‚É”–‚¢cü‚ğˆø‚«‚Ü‚·BŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚è‚Ü‚·iü‚Ì‰E‚Ì“ú‚Én‚Ü‚èA¶‚Ì“ú‚ÉI‚í‚é“_j
+'    ET’PˆÊ‚Ì–Ú·‚è‚Å‚à—ñ‚Í1“ú‚¸‚Âi×‚¢—ñj‚ÅAT‚Ì‹«–ÚiŒ—jj‚ğÀüA“ú‚Ì‹«–Ú‚ğ“_ü‚É‚µ‚Ü‚·B
+'      “ú•t‚Ìs‚É‚ÍŒ—j‚Ì“ú•t‚ğ‘‚«‚Ü‚·B›‚ª‰½“ú‚É‚ ‚é‚©‚ÍAŒ—j‚Ìü‚©‚ç“_ü‚ğ”‚¦‚Ä“Ç‚İ‚Ü‚·
 '
 '  F‚Æ‹L†
 '    E–îü‚Æ•¶š‚Í‰ïĞ‚²‚Æ‚ÌF‚Å‚·Buİ’èv‚Ìu‰ïĞ‚ÌFv‚Ì•\‚ÅA‰ïĞ–¼‚Ì‰E‚ÌƒZƒ‹iB—ñj‚Ì
@@ -105,14 +105,14 @@ Private Const NODE_TAG As String = "NWNODE"          ' “®‚©‚¹‚é›‚Ì–Úˆói‘ã‘Öƒeƒ
 ' ---- ƒŒƒCƒAƒEƒg ----
 Private Const LABEL_COL_WIDTH As Double = 16    ' H––¼‚Ì—ñ‚Ì•
 Private Const DAY_COL_WIDTH As Double = 3.4     ' “ú’PˆÊ‚Ì‚Æ‚«‚Ì1“ú•ª‚Ì—ñ•
-Private Const WEEK_COL_WIDTH As Double = 7      ' T’PˆÊ‚Ì‚Æ‚«‚Ì1T•ª‚Ì—ñ•
+Private Const WEEK_DAY_COL_WIDTH As Double = 0.7 ' T’PˆÊ‚Ì‚Æ‚«‚Ì1“ú•ª‚Ì—ñ•i1T‚Å‚¨‚æ‚»7•¶š•ªj
 Private Const ZONE_COL_WIDTH As Double = 10     ' H‹æ–¼‚Ì—ñ‚Ì•iH‹æ‚ª‚ ‚é‚Æ‚«j
 Private Const PURP_COL_WIDTH As Double = 12     ' –Ú“I‚Ì—ñiA—ñj‚Ì•i–Ú“I‚ª‚ ‚é‚Æ‚«j
 Private Const LANE_HEIGHT As Double = 44        ' 1’i‚Ì‚‚³iptj
 Private Const ARROW_OFFSET As Double = 24       ' ’i‚Ìã’[‚©‚ç–îü‚Ü‚Å‚Ì‹——£iptj
 Private Const NODE_D As Double = 12             ' Œ‹‡“_i›j‚Ì’¼Œaiptj
 Private Const MIN_DAY_COLS As Long = 40         ' “ú’PˆÊ‚ÌÅ¬—ñ”i–}—á‚ªû‚Ü‚é•j
-Private Const MIN_WEEK_COLS As Long = 18        ' T’PˆÊ‚ÌÅ¬—ñ”
+Private Const MIN_WEEK_COLS As Long = 18        ' T’PˆÊ‚ÌÅ¬‚ÌT”
 Private Const AUTO_DAY_SPAN As Long = 184       ' –Ú·‚è‚ªu©“®v‚Ì‚Æ‚«A“ú’PˆÊ‚É‚·‚éŠúŠÔ‚ÌãŒÀi“új
 Private Const MAX_DAY_SPAN As Long = 731        ' u“úv‚É‚µ‚Ä‚¢‚Ä‚àA‚±‚ê‚æ‚è’·‚¢ŠúŠÔ‚ÍT’PˆÊ‚É‚·‚éi“új
 Private Const NAME_FONT As Double = 8           ' –îü‚Ìãiì‹ÆIDEì‹Æ–¼j‚Ì•¶šƒTƒCƒY
@@ -192,7 +192,8 @@ Private sdFrom() As Long, sdTo() As Long, sdSlot() As Long
 ' ---- •`‰æ ----
 Private wsC As Worksheet
 Private sheetMode As Long, isOverall As Boolean, useSummary As Boolean, sheetCaption As String
-Private viewStart As Long, viewEnd As Long, nCols As Long, daysPerCol As Long, dayW As Double
+Private viewStart As Long, viewEnd As Long, nCols As Long, dayW As Double
+Private weekScale As Boolean    ' T’PˆÊ‚Ì–Ú·‚èi—ñ‚Í1“ú‚¸‚Â‚Ì‚Ü‚Ü×‚­‚µAT‚Ì‹«–Ú‚ğÀüE“ú‚Ì‹«–Ú‚ğ“_ü‚É‚·‚éj
 Private labelCols As Long, dateCol As Long      ' c²‚Ì—ñ”i–Ú“IEH‹æEH–‚Ì‚¤‚¿g‚¤‚à‚Ìj‚ÆA“ú•t–Ú·‚è‚ÌŠJn—ñ
 Private zoneCol As Long                         ' H‹æ‚Ì—ñiH‹æ‚ª–³‚¯‚ê‚Î 0jB–Ú“I‚ª‚ ‚ê‚Î A—ñAH–‚Í labelCols —ñ
 Private nPhaseRows As Long, rowMonth As Long, rowDay As Long, rowWeekday As Long, firstLaneRow As Long
@@ -1097,26 +1098,24 @@ Private Sub SetViewRange()
     viewEnd = maxF + 2
 
     ' –Ú·‚èFuTvu“úvu©“®vi‹ó—“‚à©“®jB©“®‚ÍŠúŠÔ‚ª AUTO_DAY_SPAN “ú‚Ü‚Å‚È‚ç“ú’PˆÊB
-    ' ‘S‘ÌH’ö‚Íu“úv‚Å‚àŠúŠÔ‚ª MAX_DAY_SPAN “ú‚ğ’´‚¦‚é‚Æ‚«‚ÍA—ñ‚ª‘½‚·‚¬‚Äd‚­‚È‚é‚Ì‚ÅT’PˆÊ‚É‚·‚é
+    ' ‘S‘ÌH’ö‚Íu“úv‚Å‚àŠúŠÔ‚ª MAX_DAY_SPAN “ú‚ğ’´‚¦‚é‚Æ‚«‚ÍA‰¡‚É’·‚­‚È‚è‚·‚¬‚é‚Ì‚ÅT’PˆÊ‚É‚·‚é
     ' iŠú‚ÌƒV[ƒgEÚ×H’ö‚Íu“úv‚È‚çA’·‚­‚Ä‚à“ú’PˆÊ‚Ì‚Ü‚Üj
     If isOverall Then sv = GetSettingValue("‘S‘Ì‚Ì–Ú·‚è") Else sv = GetSettingValue("Šú‚²‚Æ‚Ì–Ú·‚è")
     If Len(CellText(sv)) = 0 Then sv = GetSettingValue("–Ú·‚è")
     sc = CellText(sv)
+    weekScale = False
     If InStr(sc, "T") > 0 Then
-        daysPerCol = 7
+        weekScale = True
     ElseIf InStr(sc, "“ú") > 0 Then
-        daysPerCol = 1
         If isOverall And viewEnd - viewStart > MAX_DAY_SPAN Then
-            daysPerCol = 7
+            weekScale = True
             If Len(autoWeekNote) > 0 Then autoWeekNote = autoWeekNote & "E"
             autoWeekNote = autoWeekNote & "u" & curSheetName & "v"
         End If
     ElseIf AutoSpan() > AUTO_DAY_SPAN Then
-        daysPerCol = 7
-    Else
-        daysPerCol = 1
+        weekScale = True
     End If
-    If daysPerCol = 7 Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)
+    If weekScale Then viewStart = viewStart - (Weekday(CDate(viewStart), vbMonday) - 1)   ' Œ—j‚©‚ç
 End Sub
 
 ' –Ú·‚è‚ªu©“®v‚Ì‚Æ‚«‚ÉŒ©‚éŠúŠÔBŠú‚ÌƒV[ƒg‚ÍA‚Ç‚ÌŠú‚à“¯‚¶–Ú·‚è‚É‚È‚é‚æ‚¤ˆê”Ô’·‚¢Šú‚ÅŒˆ‚ß‚é
@@ -1724,9 +1723,12 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     rowWeekday = rowMonth + 2
     firstLaneRow = rowMonth + 3
 
-    nCols = (viewEnd - viewStart) \ daysPerCol + 1
-    If daysPerCol = 1 And nCols < MIN_DAY_COLS Then nCols = MIN_DAY_COLS
-    If daysPerCol = 7 And nCols < MIN_WEEK_COLS Then nCols = MIN_WEEK_COLS
+    nCols = viewEnd - viewStart + 1                 ' “ú•t‚Ì—ñ‚Í1“ú1—ñiT’PˆÊ‚àj
+    If weekScale Then
+        nCols = WholeWeeks(MaxL(nCols, MIN_WEEK_COLS * 7))
+    ElseIf nCols < MIN_DAY_COLS Then
+        nCols = MIN_DAY_COLS
+    End If
 
     With wsC.Cells
         .Font.Name = "ŸàƒSƒVƒbƒN"
@@ -1744,19 +1746,24 @@ Private Sub CreateChartSheet(ByVal sheetName As String)
     wsC.Columns(labelCols).ColumnWidth = LABEL_COL_WIDTH
     dateCol = labelCols + 1
     SetDateColumns
-    dayW = wsC.Cells(1, dateCol).Width / daysPerCol      ' 1“ú•ª‚Ì•iptj
+    dayW = wsC.Cells(1, dateCol).Width                  ' 1“ú•ª‚Ì•iptj
 End Sub
 
 Private Sub SetDateColumns()
     wsC.Range(wsC.Columns(dateCol), wsC.Columns(dateCol + nCols - 1)).ColumnWidth = _
-        IIf(daysPerCol = 1, DAY_COL_WIDTH, WEEK_COL_WIDTH)
+        IIf(weekScale, WEEK_DAY_COL_WIDTH, DAY_COL_WIDTH)
     xCacheOK = False
 End Sub
+
+' T’PˆÊ‚Ì‚Æ‚«‚ÍA“ú•t‚Ì—ñ‚Ì”‚ğT‚ÌØ‚ê–Úi7“ú‚²‚Æj‚É‚»‚ë‚¦‚é
+Private Function WholeWeeks(ByVal n As Long) As Long
+    If weekScale Then WholeWeeks = ((n + 6) \ 7) * 7 Else WholeWeeks = n
+End Function
 
 ' ƒ‰ƒxƒ‹‚ª‰E’[‚©‚ç‚Í‚İo‚³‚È‚¢‚æ‚¤A•K—v‚È‚ç“ú•t‚Ì—ñ‚ğ‘«‚·
 Private Sub FitColumns()
     Dim needCols As Long
-    needCols = Int(LayoutLabels() / daysPerCol) + 2
+    needCols = WholeWeeks(Int(LayoutLabels()) + 2)
     If needCols > nCols Then
         nCols = needCols
         SetDateColumns
@@ -1829,17 +1836,19 @@ Private Sub DrawGrid()
     If usePurps Then wsC.Cells(rowDay, 1).Value = "–Ú“I"
     If useZones Then wsC.Cells(rowDay, zoneCol).Value = "H‹æ"
     wsC.Cells(rowDay, labelCols).Value = "H–"
-    ' “úiTj‚Ì‹«–Ú‚ÌŒrüF”–‚¢ŠDF‚Ì×üBŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚éi—ñ‚²‚Æ‚Å‚Í‚È‚­A‚Ü‚Æ‚ß‚Äˆø‚­j
+    ' “ú‚Ì‹«–Ú‚ÌŒrüF“ú’PˆÊ‚Í”–‚¢ŠDF‚Ì×üAT’PˆÊ‚Í“_üiT‚Ì‹«–Ú‚Í‰º‚ÅÀü‚É‚·‚éjBŒ‹‡“_i›j‚Í‚±‚Ìü‚Ìã‚Éæ‚é
+    ' i—ñ‚²‚Æ‚Å‚Í‚È‚­A‚Ü‚Æ‚ß‚Äˆø‚­j
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(lastLaneRow, lastCol)).Borders(xlInsideVertical)
-        .LineStyle = xlContinuous
+        .LineStyle = IIf(weekScale, xlDot, xlContinuous)
         .Weight = xlThin
-        .Color = RGB(217, 217, 217)
+        .Color = IIf(weekScale, RGB(191, 191, 191), RGB(217, 217, 217))
     End With
     ' –Ú·‚è‚Ì•¶š‚Í”z—ñ‚É‚½‚ß‚Ä1‰ñ‚Å‘‚«A–ÔŠ|‚¯‚Í“¯‚¶F‚ª‘±‚­—ñ‚ğ‚Ü‚Æ‚ß‚Ä“h‚é
     ReDim vMon(1 To 1, 1 To nCols): ReDim vDay(1 To 1, 1 To nCols): ReDim vWk(1 To 1, 1 To nCols)
     For c = 0 To nCols - 1
-        d = viewStart + c * daysPerCol
+        d = viewStart + c
         col = dateCol + c
+        wd = Weekday(CDate(d), vbSunday)
         If c = 0 Or Month(CDate(d)) <> prevMonth Then
             vMon(1, c + 1) = "'" & Format(CDate(d), "yyyy/m")
             If c > 0 Then       ' Œ‚Ì‹«–Ú‚Ì”Z‚¢üiÅ‰‚Ì—ñ‚Ì¶‚ÍA‚ ‚Æ‚Å‚Ü‚Æ‚ß‚Äˆø‚­j
@@ -1849,10 +1858,17 @@ Private Sub DrawGrid()
                 End With
             End If
             prevMonth = Month(CDate(d))
+        ElseIf weekScale And wd = vbMonday Then        ' T‚Ì‹«–ÚiŒ—j‚Ì¶j‚ÌÀü
+            With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(lastLaneRow, col)).Borders(xlEdgeLeft)
+                .LineStyle = xlContinuous
+                .Weight = xlThin
+                .Color = RGB(166, 166, 166)
+            End With
         End If
         clr = 0
-        If daysPerCol = 1 Then
-            wd = Weekday(CDate(d), vbSunday)
+        If weekScale Then
+            If wd = vbMonday Then vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")   ' T‚Ì‰‚ßiŒ—jj‚Ì“ú•t
+        Else
             vDay(1, c + 1) = Day(CDate(d))
             vWk(1, c + 1) = Mid$("“úŒ‰Î…–Ø‹à“y", wd, 1)
             If IsHoliday(d) Then
@@ -1862,9 +1878,6 @@ Private Sub DrawGrid()
                 clr = RGB(242, 242, 242)
             End If
             If wd = vbSunday Then wsC.Cells(rowWeekday, col).Font.Color = RGB(192, 0, 0)
-        Else
-            vDay(1, c + 1) = "'" & Format(CDate(d), "m/d")
-            vWk(1, c + 1) = Mid$("“úŒ‰Î…–Ø‹à“y", Weekday(CDate(d), vbSunday), 1)   ' T‚Ì‰‚ß‚Ì“úiŒ—jj‚Ì—j“ú
         End If
         If clr <> runClr Then
             If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, col - 1)).Interior.Color = runClr
@@ -1875,15 +1888,12 @@ Private Sub DrawGrid()
     If runClr <> 0 Then wsC.Range(wsC.Cells(rowDay, runCol), wsC.Cells(lastLaneRow, lastCol)).Interior.Color = runClr
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Value = vMon
     wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowDay, lastCol)).Value = vDay
-    wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
+    If Not weekScale Then wsC.Range(wsC.Cells(rowWeekday, dateCol), wsC.Cells(rowWeekday, lastCol)).Value = vWk
     If showProg Then
-        If progT >= viewStart And progT < viewStart + nCols * daysPerCol Then
-            c = (progT - viewStart) \ daysPerCol
-            MarkStatusDay dateCol + c, viewStart + c * daysPerCol
-        End If
+        If progT >= viewStart And progT < viewStart + nCols Then MarkStatusDay dateCol + progT - viewStart
     End If
     With wsC.Range(wsC.Cells(rowDay, dateCol), wsC.Cells(rowWeekday, lastCol))
-        .HorizontalAlignment = xlCenter
+        .HorizontalAlignment = IIf(weekScale, xlLeft, xlCenter)     ' T’PˆÊ‚Ì“ú•t‚ÍŒ—j‚Ì—ñ‚©‚ç‰E‚Ö‚Í‚İo‚µ‚Ä‘‚­
         .Font.Size = 8
     End With
     wsC.Range(wsC.Cells(rowMonth, dateCol), wsC.Cells(rowMonth, lastCol)).Font.Size = 8
@@ -1902,15 +1912,15 @@ Private Sub DrawGrid()
     If Not IsDate(created) Then created = Date
     txt = ""
     If Len(CellText(sv)) > 0 Then txt = "‘æ" & CellText(sv) & "”Å@"
-    txt = txt & "ì¬“úF" & Format(created, "yyyy/mm/dd") & "@–Ú·‚èF" & IIf(daysPerCol = 1, "“ú", "T") & "’PˆÊ"
-    If daysPerCol = 1 Then
+    txt = txt & "ì¬“úF" & Format(created, "yyyy/mm/dd") & "@–Ú·‚èF" & IIf(weekScale, "T", "“ú") & "’PˆÊ"
+    If Not weekScale Then
         If hasHol Then
             txt = txt & "i–ÔŠ|‚¯FŠDF“y“úAÔ‹xH“új"
         Else
             txt = txt & "i–ÔŠ|‚¯‚Í“y“új"
         End If
     Else
-        txt = txt & "iŒ—jn‚Ü‚èj"
+        txt = txt & "iŒ—jn‚Ü‚èB“_ü‚Í“ú‚Ì‹æØ‚èj"
     End If
     wsC.Cells(2, 1).Value = txt
     If showProg Then AddProgressSummary txt
@@ -2954,17 +2964,15 @@ End Sub
 '==============================================================================
 '  }Œ`‚ğ•`‚­•”•i
 '==============================================================================
-' “ú d ‚Ì¶’[‚Ì x À•WB“ú•t‚Ì—ñ‚Í‚·‚×‚Ä“¯‚¶•‚È‚Ì‚ÅAÅ‰‚Ì—ñ‚ÌˆÊ’u‚Æ•‚ğˆê“x‚¾‚¯“Ç‚ñ‚ÅŒvZ‚·‚é
+' “ú d ‚Ì¶’[‚Ì x À•WB“ú•t‚Ì—ñ‚Í1“ú1—ñ‚Å‚·‚×‚Ä“¯‚¶•‚È‚Ì‚ÅAÅ‰‚Ì—ñ‚ÌˆÊ’u‚Æ•‚ğˆê“x‚¾‚¯“Ç‚ñ‚ÅŒvZ‚·‚é
 ' i–ˆ‰ñƒZƒ‹‚É–â‚¢‡‚í‚¹‚é‚ÆA€–Ú‚ª‘½‚¢‚Æ‚«‚É’x‚¢j
 Private Function XOf(ByVal d As Long) As Double
-    Dim off As Long
     If Not xCacheOK Then
         xLeft0 = wsC.Cells(rowDay, dateCol).Left
         xColW = wsC.Cells(rowDay, dateCol).Width
         xCacheOK = True
     End If
-    off = d - viewStart
-    XOf = xLeft0 + (off \ daysPerCol) * xColW + xColW * ((off Mod daysPerCol) / daysPerCol)
+    XOf = xLeft0 + (d - viewStart) * xColW
 End Function
 
 ' ’i L ‚Ì–îü‚Ì y À•Wi’i‚Ìs‚Ìã’[‚ÍAs‚Ì‚‚³‚ğŒˆ‚ß‚½‚ ‚Æ‚Éˆê“x‚¾‚¯“Ç‚Şj
@@ -4343,10 +4351,11 @@ Private Sub WriteProgressCols(ByVal ws As Worksheet, ByVal hdr As Long, ByVal la
     ws.Range(ws.Cells(hdr + 1, c(4)), ws.Cells(lastRow, c(4))).NumberFormat = "[Red]0""“ú’x‚ê"";[Blue]0""“ú‘‚¢"";""|"""
 End Sub
 
-' Šî€“ú‚Ì—ñiT’PˆÊ‚È‚ç‚»‚ÌTj‚Ì–Ú·‚è‚Éˆó‚ğ•t‚¯‚é
-Private Sub MarkStatusDay(ByVal col As Long, ByVal d As Long)
-    If progT < d Or progT >= d + daysPerCol Then Exit Sub
-    With wsC.Range(wsC.Cells(rowDay, col), wsC.Cells(rowWeekday, col))
+' Šî€“ú‚Ì—ñ‚Ì–Ú·‚è‚Éˆó‚ğ•t‚¯‚éiT’PˆÊ‚ÍA“ú•t‚Ìs‚ÉŒ—j‚Ì“ú•t‚ğ‘‚­‚Ì‚ÅA‚»‚Ì‰º‚Ìs‚¾‚¯j
+Private Sub MarkStatusDay(ByVal col As Long)
+    Dim r1 As Long
+    If weekScale Then r1 = rowWeekday Else r1 = rowDay
+    With wsC.Range(wsC.Cells(r1, col), wsC.Cells(rowWeekday, col))
         .Interior.Color = PROG_COLOR
         .Font.Color = RGB(255, 255, 255)
         .Font.Bold = True
@@ -4368,7 +4377,7 @@ End Sub
 ' –}—á‚ÌƒCƒiƒYƒ}üiƒCƒiƒYƒ}ü‚ğ•`‚¢‚½ƒV[ƒg‚¾‚¯j
 Private Sub LegendProgress(ByRef x As Double, ByVal y As Double)
     Dim txt As String
-    If progTb < viewStart Or progTb > viewStart + nCols * daysPerCol Then Exit Sub
+    If progTb < viewStart Or progTb > viewStart + nCols Then Exit Sub
     DrawZigzag x, y
     txt = "ƒCƒiƒYƒ}üi" & DateMD(progT) & "‚Ìì‹ÆI—¹“_‚Ìi‚İE’x‚êj"
     AddText x + 42, y, txt, 8, RGB(0, 0, 0), False, 2
@@ -4383,7 +4392,7 @@ Private Sub DrawProgressLine()
 
     If Not showProg Then Exit Sub
     lo = viewStart
-    hi = viewStart + nCols * daysPerCol
+    hi = viewStart + nCols
     If progTb < lo Or progTb > hi Then Exit Sub
     xT = XOfDay(progTb)
     Set fb = wsC.Shapes.BuildFreeform(msoEditingAuto, xT, wsC.Cells(firstLaneRow, 1).Top)

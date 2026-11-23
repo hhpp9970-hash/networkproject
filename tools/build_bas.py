@@ -26,7 +26,7 @@ KNOWN = {
     "DoEvents", "Timer", "Like", "Name", "FreeformBuilder", "ListObject", "Done", "Fail",
     "vbCr", "vbLf", "vbTab", "vbOKCancel", "vbYesNo",
     "msoAlignRight", "msoEditingAuto", "msoSegmentLine", "msoShapeRoundedRectangle",
-    "xlCalculationManual", "xlDefault", "xlErrorHandler", "xlInsideVertical", "xlInterrupt", "xlThick", "xlWait",
+    "xlCalculationManual", "xlDefault", "xlDot", "xlErrorHandler", "xlInsideVertical", "xlInterrupt", "xlThick", "xlWait",
 }
 
 

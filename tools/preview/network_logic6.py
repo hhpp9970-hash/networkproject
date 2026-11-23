@@ -233,6 +233,8 @@ def install():
 
 if __name__ == "__main__":
     outdir = sys.argv[1]
+    week = "--week" in sys.argv[2:]  # 週単位の目盛りで描く（ファイル名の末尾に _週）
+    dw, tail = (v5.WEEK_DAY_W, "_週") if week else (v5.DAY_W, "")
     v3.HOL.update(d.toordinal() for d, _ in HOLIDAYS)
     acts = v5.make_acts()
     apply_actuals(acts)
@@ -257,13 +259,13 @@ if __name__ == "__main__":
         holder = {}
 
         def hook(pre):
-            holder["lay"] = v5.layout_labels(acts, c, ph, gr, zn, pre)
+            holder["lay"] = v5.layout_labels(acts, c, ph, gr, zn, pre, day_w=dw)
             return holder["lay"]["occ"]
 
-        sh = v4.build_sheet(acts, c, ph, gr, zn, mode, before_links=hook)
+        sh = v4.build_sheet(acts, c, ph, gr, zn, mode, day_w=dw, before_links=hook, week=week)
         lay = holder["lay"]
-        v5.render(acts, c, ph, gr, zn, sh, lay, colors, co_order, f"{outdir}/preview6_{nm}.png", title, cap,
-                  prog=prog_for_render())
-        bad, pushed, stacked = v5.overlaps(sh, lay)
+        v5.render(acts, c, ph, gr, zn, sh, lay, colors, co_order, f"{outdir}/preview6_{nm}{tail}.png", title, cap,
+                  prog=prog_for_render(), day_w=dw, week=week)
+        bad, pushed, stacked = v5.overlaps(sh, lay, dw)
         print(f"{nm}: overlaps={bad} pushed={pushed} stacked={stacked} "
               f"lane_x={[None if lane_x(sh, L) is None else round(lane_x(sh, L) - P['Tb'], 2) for L in range(sh['nlane'])]}")

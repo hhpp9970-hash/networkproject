@@ -140,7 +140,7 @@ def name_label(acts, ph, gr, zn, it):
     return t
 
 
-def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
+def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None, week=False):
     """mode：0＝全体工程、-1＝詳細工程、1以上＝その期"""
     S, F, crit, preds, succs = c["S"], c["F"], c["crit"], c["preds"], c["succs"]
     n = len(acts)
@@ -161,6 +161,8 @@ def build_sheet(acts, c, ph, gr, zn, mode, day_w=24.0, before_links=None):
     minS = min(it["s"] for it in items)
     maxF = max(it["f"] for it in items)
     vs, ve = minS - 2, maxF + 2
+    if week:  # 週単位の目盛りは月曜から
+        vs -= dt.date.fromordinal(vs).weekday()
 
     def clamp(d):
         return min(max(d, vs + 1), ve)
